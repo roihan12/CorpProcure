@@ -1,0 +1,140 @@
+﻿namespace CorpProcure.Models.Enums;
+
+/// <summary>
+/// Role pengguna dalam sistem
+/// </summary>
+public enum UserRole
+{
+    /// <summary>
+    /// Staff biasa yang mengajukan permintaan pembelian
+    /// </summary>
+    Staff = 1,
+
+    /// <summary>
+    /// Manager divisi - Approval level 1 (Operasional)
+    /// </summary>
+    Manager = 2,
+
+    /// <summary>
+    /// Head of Finance/Procurement - Approval level 2 (Finansial)
+    /// </summary>
+    Finance = 3,
+
+    /// <summary>
+    /// Admin sistem
+    /// </summary>
+    Admin = 4,
+
+    /// <summary>
+    /// Admin procurement yang mengirim PO ke vendor
+    /// </summary>
+    Procurement = 5
+}
+
+/// <summary>
+/// Status purchase request dalam workflow approval
+/// </summary>
+public enum RequestStatus
+{
+    /// <summary>
+    /// Draft - Belum disubmit oleh requester
+    /// </summary>
+    Draft = 1,
+
+    /// <summary>
+    /// Menunggu approval dari Manager (Level 1)
+    /// </summary>
+    PendingManager = 2,
+
+    /// <summary>
+    /// Manager approved, menunggu approval Finance (Level 2)
+    /// </summary>
+    PendingFinance = 3,
+
+    /// <summary>
+    /// Fully approved - siap menjadi PO
+    /// </summary>
+    Approved = 4,
+
+    /// <summary>
+    /// Ditolak oleh approver (Manager atau Finance)
+    /// </summary>
+    Rejected = 5,
+
+    /// <summary>
+    /// Dibatalkan oleh requester
+    /// </summary>
+    Cancelled = 6
+}
+
+/// <summary>
+/// Action yang dilakukan approver
+/// </summary>
+public enum ApprovalAction
+{
+    /// <summary>
+    /// Menyetujui request
+    /// </summary>
+    Approved = 1,
+
+    /// <summary>
+    /// Menolak request
+    /// </summary>
+    Rejected = 2,
+
+    /// <summary>
+    /// Membatalkan approval yang sudah diberikan
+    /// </summary>
+    Cancelled = 3
+}
+
+/// <summary>
+/// Tipe audit log untuk tracking perubahan
+/// </summary>
+public enum AuditLogType
+{
+    /// <summary>
+    /// Record baru dibuat
+    /// </summary>
+    Create = 1,
+
+    /// <summary>
+    /// Record diupdate
+    /// </summary>
+    Update = 2,
+
+    /// <summary>
+    /// Record dihapus (soft delete)
+    /// </summary>
+    Delete = 3,
+
+    /// <summary>
+    /// Request disubmit
+    /// </summary>
+    Submit = 4,
+
+    /// <summary>
+    /// Request diapprove
+    /// </summary>
+    Approve = 5,
+
+    /// <summary>
+    /// Request direject
+    /// </summary>
+    Reject = 6,
+
+    /// <summary>
+    /// Request dibatalkan
+    /// </summary>
+    Cancel = 7,
+
+    /// <summary>
+    /// Budget direserve/digunakan
+    /// </summary>
+    BudgetReserve = 8,
+
+    /// <summary>
+    /// Budget dirilis kembali
+    /// </summary>
+    BudgetRelease = 9
+}
