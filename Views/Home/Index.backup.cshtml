@@ -1,0 +1,128 @@
+﻿@using CorpProcure.Models
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<User> UserManager
+@{
+    ViewData["Title"] = "Dashboard";
+    var chartLabels = ViewData["ChartLabels"] as List<string> ?? new List<string>();
+    var chartData = ViewData["ChartData"] as List<int> ?? new List<int>();
+    var currentUserId = UserManager.GetUserId(User);
+}
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1 class="display-6 fw-bold mb-3">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-graph-up"></i> Vehicle Usage Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="vehicleUsageChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-calendar-check"></i> Pending Approvals
+                </h5>
+            </div>
+            <div class="card-body">
+
+                <p class="text-center text-muted">Reservations waiting for approval</p>
+            </div>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-hourglass-split"></i> Partially Approved
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-center text-muted">Reservations in approval process</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (User.IsInRole("Approver"))
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Reservations Requiring Your Approval
+                    </h5>
+                </div>
+                <div class="card-body">
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Set up the chart data
+        const labels = @Html.Raw(Json.Serialize(chartLabels));
+        const data = @Html.Raw(Json.Serialize(chartData));
+        
+        // Find the canvas element
+        const ctx = document.getElementById('vehicleUsageChart');
+        
+        // Create the chart
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Vehicles in Use',
+                    data: data,
+                    fill: true,
+                    backgroundColor: 'rgba(13, 110, 253, 0.2)',
+                    borderColor: 'rgb(13, 110, 253)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Vehicles'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Vehicle Usage Over Time'
+                    }
+                }
+            }
+        });
+    </script>
+}

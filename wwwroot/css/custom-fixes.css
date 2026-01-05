@@ -1,0 +1,13 @@
+/* Custom fixes for dropdown positioning */
+.dropdown-menu-custom {
+  right: auto !important;
+  left: auto !important;
+  transform: translateX(-80%) !important;
+  min-width: 280px;
+}
+
+@media (max-width: 576px) {
+  .dropdown-menu-custom {
+    transform: translateX(-50%) !important;
+  }
+}

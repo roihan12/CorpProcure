@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CorpProcure</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/sidebar-menu.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/simplebar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/apexcharts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/prism.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/rangeslider.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/sweetalert.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/quill.snow.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/google-icon.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/remixicon.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/swiper-bundle.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/fullcalendar.main.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/jsvectormap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/lightpick.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
+</head>
+
+<body class="boxed-size bg-white">
+
+    <div class="preloader" id="preloader">
+        <div class="preloader">
+            <div class="waviy position-relative">
+                <span class="d-inline-block">Corp</span>
+                <span class="d-inline-block">Procure</span>
+            </div>
+        </div>
+    </div>
+
+
+    @RenderBody()
+
+    <button class="switch-toggle settings-btn dark-btn p-0 bg-transparent position-absolute top-0 d-none"
+        id="switch-toggle">
+        <span class="dark"><i class="material-symbols-outlined">light_mode</i></span>
+        <span class="light"><i class="material-symbols-outlined">dark_mode</i></span>
+    </button>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/sidebar-menu.js" asp-append-version="true"></script>
+    <script src="~/js/dragdrop.js" asp-append-version="true"></script>
+    <script src="~/js/rangeslider.min.js" asp-append-version="true"></script>
+    <script src="~/js/sweetalert.js" asp-append-version="true"></script>
+    <script src="~/js/quill.min.js" asp-append-version="true"></script>
+    <script src="~/js/data-table.js" asp-append-version="true"></script>
+    <script src="~/js/prism.js" asp-append-version="true"></script>
+    <script src="~/js/clipboard.min.js" asp-append-version="true"></script>
+    <script src="~/js/feather.min.js" asp-append-version="true"></script>
+    <script src="~/js/simplebar.min.js" asp-append-version="true"></script>
+    <script src="~/js/apexcharts.min.js" asp-append-version="true"></script>
+    <script src="~/js/echarts.js" asp-append-version="true"></script>
+    <script src="~/js/swiper-bundle.min.js" asp-append-version="true"></script>
+    <script src="~/js/fullcalendar.main.js" asp-append-version="true"></script>
+    <script src="~/js/jsvectormap.min.js" asp-append-version="true"></script>
+    <script src="~/js/world-merc.js" asp-append-version="true"></script>
+    <script src="~/js/moment.min.js" asp-append-version="true"></script>
+    <script src="~/js/lightpick.js" asp-append-version="true"></script>
+    <script src="~/js/custom/apexcharts.js" asp-append-version="true"></script>
+    <script src="~/js/custom/echarts.js" asp-append-version="true"></script>
+    <script src="~/js/custom/custom.js" asp-append-version="true"></script>
+    @* <script src="~/js/site.js" asp-append-version="true"></script> *@
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

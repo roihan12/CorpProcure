@@ -1,5 +1,7 @@
 ﻿using CorpProcure.Data.Interceptors;
 using CorpProcure.Models;
+using CorpProcure.Models.Base;
+using CorpProcure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -11,12 +13,17 @@ namespace CorpProcure.Data;
 /// </summary>
 public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
 {
+    private readonly ICurrentUserService? _currentUserService;
     private readonly AuditInterceptor _auditInterceptor;
 
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, AuditInterceptor auditInterceptor)
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        AuditInterceptor auditInterceptor,
+        ICurrentUserService? currentUserService = null)
         : base(options)
     {
         _auditInterceptor = auditInterceptor;
+        _currentUserService = currentUserService;
     }
 
     // DbSets untuk semua entities
@@ -230,16 +237,39 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     /// </summary>
     public override int SaveChanges()
     {
+        // Track changes before saving
+        var entriesToAudit = ChangeTracker.Entries<BaseEntity>()
+            .Where(e => e.State == EntityState.Added ||
+                       e.State == EntityState.Modified ||
+                       e.State == EntityState.Deleted)
+            .Select(e => new
+            {
+                Entry = e,
+                State = e.State
+            })
+            .ToList();
+
+        // Save changes first
         var result = base.SaveChanges();
 
-        // Generate audit logs setelah save
-        // TODO: Get current user from service
-        // var auditLogs = AuditInterceptor.GenerateAuditLogs(this, currentUserId, currentUserName);
-        // if (auditLogs.Any())
-        // {
-        //     AuditLogs.AddRange(auditLogs);
-        //     base.SaveChanges();
-        // }
+        // Generate audit logs after save (if there were changes)
+        if (entriesToAudit.Any() && _currentUserService != null)
+        {
+            var currentUserId = _currentUserService.UserId;
+            var currentUserName = _currentUserService.UserName ?? "System";
+
+            // Accept all changes to get correct states
+            ChangeTracker.AcceptAllChanges();
+
+            // Generate audit logs (note: this must be done after AcceptAllChanges)
+            var auditLogs = AuditInterceptor.GenerateAuditLogs(this, currentUserId, currentUserName);
+
+            if (auditLogs.Any())
+            {
+                AuditLogs.AddRange(auditLogs);
+                base.SaveChanges(); // Save audit logs
+            }
+        }
 
         return result;
     }
@@ -249,16 +279,39 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     /// </summary>
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        // Track changes before saving
+        var entriesToAudit = ChangeTracker.Entries<BaseEntity>()
+            .Where(e => e.State == EntityState.Added ||
+                       e.State == EntityState.Modified ||
+                       e.State == EntityState.Deleted)
+            .Select(e => new
+            {
+                Entry = e,
+                State = e.State
+            })
+            .ToList();
+
+        // Save changes first
         var result = await base.SaveChangesAsync(cancellationToken);
 
-        // Generate audit logs setelah save
-        // TODO: Get current user from service
-        // var auditLogs = AuditInterceptor.GenerateAuditLogs(this, currentUserId, currentUserName);
-        // if (auditLogs.Any())
-        // {
-        //     await AuditLogs.AddRangeAsync(auditLogs, cancellationToken);
-        //     await base.SaveChangesAsync(cancellationToken);
-        // }
+        // Generate audit logs after save (if there were changes)
+        if (entriesToAudit.Any() && _currentUserService != null)
+        {
+            var currentUserId = _currentUserService.UserId;
+            var currentUserName = _currentUserService.UserName ?? "System";
+
+            // Accept all changes to get correct states
+            ChangeTracker.AcceptAllChanges();
+
+            // Generate audit logs (note: this must be done after AcceptAllChanges)
+            var auditLogs = AuditInterceptor.GenerateAuditLogs(this, currentUserId, currentUserName);
+
+            if (auditLogs.Any())
+            {
+                await AuditLogs.AddRangeAsync(auditLogs, cancellationToken);
+                await base.SaveChangesAsync(cancellationToken); // Save audit logs
+            }
+        }
 
         return result;
     }

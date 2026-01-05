@@ -1,0 +1,528 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    
+    // Get dashboard stats from ViewData
+    var stats = ViewData["DashboardStats"] as dynamic;
+    var statusDistribution = ViewData["StatusDistribution"] as IEnumerable<dynamic>;
+    var vehicleStatuses = ViewData["VehicleStatuses"] as IEnumerable<dynamic>;
+    var monthlyFuelData = ViewData["MonthlyFuelData"] as IEnumerable<dynamic>;
+    var regionDistribution = ViewData["RegionDistribution"] as IEnumerable<dynamic>;
+    
+    bool hasError = ViewData["Error"] != null;
+}
+
+<style>
+    .stats-icon {
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+    }
+</style>
+
+<div class="main-content-container overflow-hidden">
+    @if (hasError)
+    {
+        <div class="alert alert-warning mb-4">
+            <i class="ri-error-warning-line me-2"></i>
+            Some dashboard data couldn't be loaded. Please try refreshing the page or contact support if the issue persists.
+        </div>
+    }
+    
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="card border-0 rounded-3 mb-4"
+                        style="background: linear-gradient(108deg, #3A4252 0%, #23272E 100%);">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span
+                                    class="d-inline-block px-3 bg-success bg-opacity-25 text-success border border-success rounded-pill fs-12 fw-medium">+@(stats?.ReservationGrowth ?? 0)%</span>
+                                <div class="text-end">
+                                    <span class="ms-2 fs-12" style="color: #B1BBC8;">Last 30 days</span>
+                                    <span class="fs-12 fw-bold text-success d-block">+@(stats?.ReservationsLastMonth ?? 0) trips</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-end">
+                                <div class="flex-grow-1">
+                                    <span class="d-block mb-1" style="color: #B1BBC8;">Active Reservations</span>
+                                    <h4 class="fs-20 mb-0 text-white">@(stats?.ActiveReservations ?? 0)</h4>
+                                </div>
+                                <div class="flex-shrink-0 me-3 me-auto">
+                                    <i class="ri-calendar-check-line fs-24 text-success bg-success d-inline-block text-center rounded-circle text-white stats-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card border-0 rounded-3 bg-white mb-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span
+                                    class="d-inline-block px-3 bg-success bg-opacity-10 text-success border border-success rounded-pill fs-12 fw-medium">+@(stats?.VehicleGrowth ?? 0)%</span>
+                                <div class="text-end">
+                                    <span class="ms-2 fs-12">Last 30 days</span>
+                                    <span class="fs-12 fw-bold text-primary-div d-block">+@(stats?.VehicleLastMonth ?? 0) units</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-end">
+                                <div class="flex-grow-1">
+                                    <span class="d-block mb-1">Available Vehicles</span>
+                                    <h4 class="fs-20 mb-0">@(stats?.AvailableVehicles ?? 0)</h4>
+                                </div>
+                                <div class="flex-shrink-0 me-3 me-auto">
+                                    <i class="ri-truck-line fs-24 text-white bg-primary-div d-inline-block text-center rounded-circle text-white stats-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card border-0 rounded-3 bg-white mb-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span
+                                    class="d-inline-block px-3 bg-success bg-opacity-10 text-success border border-success rounded-pill fs-12 fw-medium">+@(stats?.DriverGrowth ?? 0)%</span>
+                                <div class="text-end">
+                                    <span class="ms-2 fs-12">Last 30 days</span>
+                                    <span class="fs-12 fw-bold text-primary d-block">+@(stats?.DriverLastMonth ?? 0)</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-end">
+                                <div class="flex-grow-1">
+                                    <span class="d-block mb-1">Active Drivers</span>
+                                    <h4 class="fs-20 mb-0">@(stats?.ActiveDrivers ?? 0)</h4>
+                                </div>
+                                <div class="flex-shrink-0 me-3 me-auto">
+                                    <i class="ri-user-line fs-24 text-white bg-primary d-inline-block text-center rounded-circle text-white stats-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="card border-0 rounded-3 bg-white mb-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span
+                                    class="d-inline-block px-3 bg-danger bg-opacity-10 text-danger border border-danger rounded-pill fs-12 fw-medium">+@(stats?.FuelGrowth ?? 0)%</span>
+                                <div class="text-end">
+                                    <span class="ms-2 fs-12">Last 30 days</span>
+                                    <span class="fs-12 fw-bold text-danger d-block">+@(stats?.FuelConsumptionLastMonth ?? 0)L</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-end">
+                                <div class="flex-grow-1">
+                                    <span class="d-block mb-1">Fuel Consumption</span>
+                                    <h4 class="fs-20 mb-0">@(stats?.FuelConsumption ?? 0)L</h4>
+                                </div>
+                                <div class="flex-shrink-0 me-3 me-auto">
+                                    <i class="ri-gas-station-line fs-24 text-white bg-danger d-inline-block text-center rounded-circle text-white stats-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 rounded-3 bg-white mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0">Reservation Status</h3>
+                        <span class="fs-12">Last 30 days</span>
+                    </div>
+
+                    <div style="margin: -24px -40px -19px -17px;">
+                        <div id="reservation_status_chart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xxl-8">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-0 rounded-3 bg-white mb-4" style="height: 400px;">
+                        <div class="card-body p-4 h-100 d-flex flex-column">
+                            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
+                                <span>Fuel Consumption Trend</span>
+                                <span class="fs-12">Per Month</span>
+                            </div>
+                            <div class="flex-grow-1 d-flex align-items-center justify-content-center" style="margin: -24px -22px -26px -18px;">
+                                <canvas id="fuel_consumption_chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 rounded-3 bg-white mb-4" style="height: 400px;">
+                        <div class="card-body p-4 h-100 d-flex flex-column">
+                            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
+                                <span>Vehicle Status</span>
+                                <span class="fs-12">Current Status</span>
+                            </div>
+                            <div class="flex-grow-1 d-flex align-items-center justify-content-center" style="margin: -24px -6px -25px -17px;">
+                                <div id="vehicle_status_chart" style="width:100%;height:100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-0">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4">
+                        <h3 class="mb-0">Recent Reservations</h3>
+                        <select
+                            class="form-select month-select form-control w-135 bg-border-color border-color bg-transparent"
+                            id="reservationPeriodFilter"
+                            aria-label="Default select example">
+                            <option selected value="30">Last 30 days</option>
+                            <option value="7">Last 7 days</option>
+                            <option value="90">Last 90 days</option>
+                        </select>
+                    </div>
+
+                    <div class="default-table-area style-two transaction-history tracking-order">
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Reservation ID</th>
+                                        <th scope="col">Requester</th>
+                                        <th scope="col">Start Date</th>
+                                        <th scope="col">Vehicle</th>
+                                        <th scope="col">Purpose</th>
+                                        <th scope="col">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentReservationsTable">
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xxl-4">
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">Upcoming Maintenance</h3>
+                    <div id="upcomingMaintenanceList">
+                      
+                    </div>
+                    <div class="text-center mt-4">
+                        <a href="/Maintenance" class="btn btn-outline-primary btn-sm">
+                            <i class="ri-eye-line me-1"></i> View All Maintenance
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">Regional Overview</h3>
+                    <div id="region_map_chart" style="height: 300px;"></div>
+                    
+                    <div class="mt-4">
+                        @if (regionDistribution != null)
+                        {
+                            foreach (var region in regionDistribution)
+                            {
+                                <div class="d-flex justify-content-between mb-2">
+                                    <div>@region.Region</div>
+                                    <div class="fw-medium">@region.Count vehicles</div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+
+    
+    public string GetMaintenanceBadgeColor(DateTime date)
+    {
+        var daysUntil = (date - DateTime.Today).Days;
+        
+        if (daysUntil < 0)
+            return "bg-danger";
+        if (daysUntil <= 3)
+            return "bg-warning";
+        if (daysUntil <= 7)
+            return "bg-warning";
+            
+        return "bg-info";
+    }
+    
+    public string GetMaintenanceStatus(DateTime date)
+    {
+        var daysUntil = (date - DateTime.Today).Days;
+        
+        if (daysUntil < 0)
+            return "Overdue";
+        if (daysUntil == 0)
+            return "Today";
+        if (daysUntil == 1)
+            return "Tomorrow";
+        if (daysUntil <= 3)
+            return $"Due in {daysUntil} days";
+        if (daysUntil <= 14)
+            return $"Due in {daysUntil} days";
+            
+        return $"In {daysUntil} days";
+    }
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Reservation Status Chart (Donut Chart)
+                var statusChartElement = document.querySelector("#reservation_status_chart");
+                if (statusChartElement) {
+                    var reservationStatusOptions = {
+                        series: [
+                            @if (statusDistribution != null && statusDistribution.Any())
+                            {
+                                @Html.Raw(string.Join(", ", statusDistribution.Select(s => s.Count)))
+                            }
+                            else
+                            {
+                                <text>45, 25, 20, 10, 5, 0</text>
+                            }
+                        ],
+                        chart: {
+                            type: 'donut',
+                            height: 300
+                        },
+                        labels: [
+                            @if (statusDistribution != null && statusDistribution.Any())
+                            {
+                                @Html.Raw(string.Join(", ", statusDistribution.Select(s => $"'{s.Status}'")))
+                            }
+                            else
+                            {
+                                <text>'Approved', 'Pending', 'Completed', 'Rejected', 'Cancelled', 'Partially Approved'</text>
+                            }
+                        ],
+                        colors: ['#28a745', '#ffc107', '#17a2b8', '#dc3545', '#6c757d', '#007bff'],
+                        legend: {
+                            position: 'bottom'
+                        },
+                        responsive: [{
+                            breakpoint: 480,
+                            options: {
+                                chart: {
+                                    height: 260
+                                },
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }]
+                    };
+                    
+                    try {
+                        var reservationStatusChart = new ApexCharts(statusChartElement, reservationStatusOptions);
+                        reservationStatusChart.render();
+                    } catch (err) {
+                        console.error("Error rendering Reservation Status chart:", err);
+                        statusChartElement.innerHTML = "<div class='alert alert-danger'>Could not load chart</div>";
+                    }
+                }
+                
+                // Vehicle Status Chart (Pie Chart)
+                var vehicleChartElement = document.querySelector("#vehicle_status_chart");
+                if (vehicleChartElement) {
+                    var vehicleStatusOptions = {
+                        series: [
+                            @if (vehicleStatuses != null && vehicleStatuses.Any())
+                            {
+                                @Html.Raw(string.Join(", ", vehicleStatuses.Select(v => v.Count)))
+                            }
+                            else
+                            {
+                                <text>42, 35, 15, 8</text>
+                            }
+                        ],
+                        chart: {
+                            type: 'pie',
+                            height: 300
+                        },
+                        labels: [
+                            @if (vehicleStatuses != null && vehicleStatuses.Any())
+                            {
+                                @Html.Raw(string.Join(", ", vehicleStatuses.Select(v => $"'{v.Status}'")))
+                            }
+                            else
+                            {
+                                <text>'Available', 'In Use', 'Maintenance', 'Out of Service'</text>
+                            }
+                        ],
+                        colors: ['#28a745', '#007bff', '#ffc107', '#dc3545'],
+                        legend: {
+                            position: 'bottom'
+                        },
+                        responsive: [{
+                            breakpoint: 480,
+                            options: {
+                                chart: {
+                                    height: 260
+                                },
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }]
+                    };
+                    
+                    try {
+                        var vehicleStatusChart = new ApexCharts(vehicleChartElement, vehicleStatusOptions);
+                        vehicleStatusChart.render();
+                    } catch (err) {
+                        console.error("Error rendering Vehicle Status chart:", err);
+                        vehicleChartElement.innerHTML = "<div class='alert alert-danger'>Could not load chart</div>";
+                    }
+                }
+                
+                // Region Map Chart
+                var regionChartElement = document.querySelector("#region_map_chart");
+                if (regionChartElement) {
+                    var regionMapOptions = {
+                        series: [{
+                            name: 'Vehicles',
+                            data: [
+                                @if (regionDistribution != null && regionDistribution.Any())
+                                {
+                                    @Html.Raw(string.Join(", ", regionDistribution.Select(r => r.Count)))
+                                }
+                                else
+                                {
+                                    <text>15, 12, 8, 7</text>
+                                }
+                            ]
+                        }],
+                        chart: {
+                            type: 'bar',
+                            height: 300,
+                            toolbar: {
+                                show: false
+                            }
+                        },
+                        plotOptions: {
+                            bar: {
+                                horizontal: false,
+                                columnWidth: '55%',
+                                borderRadius: 4,
+                            },
+                        },
+                        colors: ['#6259ca'],
+                        dataLabels: {
+                            enabled: false
+                        },
+                        xaxis: {
+                            categories: [
+                                @if (regionDistribution != null && regionDistribution.Any())
+                                {
+                                    @Html.Raw(string.Join(", ", regionDistribution.Select(r => $"'{r.Region}'")))
+                                }
+                                else
+                                {
+                                    <text>'Head Office', 'Mining Area A', 'Mining Area B', 'Remote Site'</text>
+                                }
+                            ]
+                        },
+                        yaxis: {
+                            title: {
+                                text: 'Number of Vehicles'
+                            }
+                        },
+                        fill: {
+                            opacity: 1
+                        }
+                    };
+                    
+                    try {
+                        var regionMapChart = new ApexCharts(regionChartElement, regionMapOptions);
+                        regionMapChart.render();
+                    } catch (err) {
+                        console.error("Error rendering Region Map chart:", err);
+                        regionChartElement.innerHTML = "<div class='alert alert-danger'>Could not load chart</div>";
+                    }
+                }
+            } catch (err) {
+                console.error("Error in chart initialization:", err);
+            }
+            
+            // Event handler for reservation period filter
+            var periodFilter = document.getElementById("reservationPeriodFilter");
+            if (periodFilter) {
+                periodFilter.addEventListener("change", function() {
+                    // In a real application, this would call an API to get updated data
+                    // For now, we'll just show a loading message
+                    var recentReservationsTable = document.getElementById("recentReservationsTable");
+                    if (recentReservationsTable) {
+                        recentReservationsTable.innerHTML = "<tr><td colspan='6' class='text-center'>Loading...</td></tr>";
+                        
+                        setTimeout(function() {
+                            location.reload();
+                        }, 500);
+                    }
+                });
+            }
+        });
+    </script>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Prepare data for Fuel Consumption Trend
+        const monthlyFuelData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthlyFuelData));
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const fuelData = months.map((m, i) => {
+            const found = monthlyFuelData.find(x => x.Month === i + 1);
+            return found ? found.Consumption : 0;
+        });
+
+        const ctx = document.getElementById('fuel_consumption_chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Fuel Consumption (L)',
+                    data: fuelData,
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+}

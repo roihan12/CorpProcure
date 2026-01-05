@@ -1,0 +1,212 @@
+@model CorpProcure.DTOs.Auth.LoginDto
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+<style>
+    /* TYPOGRAPHY & BASE */
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #f0f2f5;
+    }
+
+    /* LAYOUT UTILS */
+    .login-wrapper {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+
+    .login-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08); /* Soft shadow */
+        overflow: hidden;
+        width: 100%;
+        max-width: 1100px;
+        min-height: 650px; /* Sedikit lebih tinggi agar gambar lega */
+        border: none;
+    }
+
+    /* LEFT COLUMN (IMAGE SECTION) */
+    .brand-section {
+        position: relative;
+        background-color: #eee; /* Fallback color */
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end; /* Text align bottom */
+        padding: 40px;
+        color: white;
+        overflow: hidden;
+    }
+
+    .bg-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+        /* Perubahan: Opacity 1 (Full Color) */
+        opacity: 1;
+        transition: transform 10s ease; /* Efek zoom lambat */
+    }
+
+    /* Efek zoom lambat pada gambar biar dinamis */
+    .brand-section:hover .bg-image {
+        transform: scale(1.05);
+    }
+
+    /* Perubahan: Gradient Overlay agar gambar tetap terang tapi teks terbaca */
+    .overlay-gradient {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        /* Gradasi dari transparan (atas) ke biru gelap (bawah) */
+        background: linear-gradient( to bottom, rgba(37, 99, 235, 0.1) 0%, rgba(15, 23, 42, 0.4) 50%, rgba(15, 23, 42, 0.95) 100% );
+    }
+
+    .brand-content {
+        position: relative;
+        z-index: 2; /* Di atas overlay */
+    }
+
+    /* RIGHT COLUMN (FORM SECTION) */
+    .form-section {
+        padding: 3.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 100%;
+    }
+
+    /* FORM STYLING */
+    .form-floating > .form-control {
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background-color: #fff;
+    }
+
+        .form-floating > .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+    .btn-primary-custom {
+        background-color: #2563eb;
+        border: none;
+        padding: 14px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+
+        .btn-primary-custom:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+        }
+
+    .brand-logo-text {
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.5px;
+    }
+</style>
+
+<div class="login-wrapper">
+    <div class="card login-card">
+        <div class="row g-0 h-100">
+
+            <div class="col-lg-6 d-none d-lg-flex brand-section">
+                <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop"
+                     alt="Procurement Logistics"
+                     class="bg-image">
+
+                <div class="overlay-gradient"></div>
+
+                <div class="brand-content">
+                    <h2 class="display-6 fw-bold mb-3 text-white">Procurement Simplified.</h2>
+
+                    <p class="fs-5 fw-light text-white opacity-90">
+                        Efficient sourcing, transparent tracking, and seamless vendor collaboration.
+                    </p>
+
+                    <div class="d-flex align-items-center mt-4 pt-3 border-top border-white border-opacity-25">
+                        <span class="badge bg-primary bg-opacity-25 border border-primary border-opacity-50 text-white me-2">V 2.0</span>
+                        <small class="text-white text-opacity-75 tracking-wider">Secure Enterprise System</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="form-section">
+
+                    <div class="mb-5">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
+                                <span class="material-symbols-outlined fs-2">local_shipping</span>
+                            </div>
+                            <span class="h3 brand-logo-text mb-0">CorpProcure</span>
+                        </div>
+                        <h4 class="fw-bold text-dark">Welcome Back</h4>
+                        <p class="text-secondary">Please enter your details to sign in.</p>
+                    </div>
+
+                    <form id="account" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 fs-14 rounded-3 mb-3" role="alert"></div>
+
+                        <div class="form-floating mb-3">
+                            <input asp-for="Email" class="form-control" placeholder="name@example.com" autocomplete="email" aria-required="true" />
+                            <label asp-for="Email" class="text-secondary">Email Address</label>
+                            <span asp-validation-for="Email" class="text-danger small ms-1"></span>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <input asp-for="Password" type="password" class="form-control" placeholder="Password" autocomplete="current-password" aria-required="true" />
+                            <label asp-for="Password" class="text-secondary">Password</label>
+                            <span asp-validation-for="Password" class="text-danger small ms-1"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
+                                <label asp-for="RememberMe" class="form-check-label text-secondary small">Remember me</label>
+                            </div>
+                            <a href="#" class="text-decoration-none small fw-semibold text-primary">Forgot Password?</a>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <button type="submit" class="btn btn-primary-custom w-100 text-white">
+                                Login to Account
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-auto">
+                        <p class="text-muted small mb-0">
+                            Don't have an account? <a href="#" class="text-primary fw-bold text-decoration-none">Request Access</a>
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

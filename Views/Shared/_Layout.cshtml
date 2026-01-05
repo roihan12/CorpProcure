@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Trezo - ASP.NET Core Admin Dashboard Template</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/sidebar-menu.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/simplebar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/apexcharts.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/prism.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/rangeslider.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/sweetalert.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/quill.snow.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/google-icon.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/remixicon.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/swiper-bundle.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/fullcalendar.main.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/jsvectormap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/lightpick.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
+    @* <link rel="stylesheet" href="~/trezo_asp_mvc.styles.css" asp-append-version="true" /> *@
+</head>
+
+<body data-bs-spy="scroll" data-bs-target="#navbar-example2" data-bs-root-margin="0px 0px -40%"
+    data-bs-smooth-scroll="true" class="scrollspy-example" tabindex="0">
+
+    @await Html.PartialAsync("~/Views/Shared/Front/_Navbar.cshtml")
+
+
+    @RenderBody()
+
+
+    @await Html.PartialAsync("~/Views/Shared/Front/_Footer.cshtml")
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/sidebar-menu.js" asp-append-version="true"></script>
+    <script src="~/js/dragdrop.js" asp-append-version="true"></script>
+    <script src="~/js/rangeslider.min.js" asp-append-version="true"></script>
+    <script src="~/js/sweetalert.js" asp-append-version="true"></script>
+    <script src="~/js/quill.min.js" asp-append-version="true"></script>
+    <script src="~/js/data-table.js" asp-append-version="true"></script>
+    <script src="~/js/prism.js" asp-append-version="true"></script>
+    <script src="~/js/clipboard.min.js" asp-append-version="true"></script>
+    <script src="~/js/feather.min.js" asp-append-version="true"></script>
+    <script src="~/js/simplebar.min.js" asp-append-version="true"></script>
+    <script src="~/js/apexcharts.min.js" asp-append-version="true"></script>
+    <script src="~/js/echarts.js" asp-append-version="true"></script>
+    <script src="~/js/swiper-bundle.min.js" asp-append-version="true"></script>
+    <script src="~/js/fullcalendar.main.js" asp-append-version="true"></script>
+    <script src="~/js/jsvectormap.min.js" asp-append-version="true"></script>
+    <script src="~/js/world-merc.js" asp-append-version="true"></script>
+    <script src="~/js/moment.min.js" asp-append-version="true"></script>
+    <script src="~/js/lightpick.js" asp-append-version="true"></script>
+    <script src="~/js/custom/apexcharts.js" asp-append-version="true"></script>
+    <script src="~/js/custom/echarts.js" asp-append-version="true"></script>
+    <script src="~/js/custom/custom.js" asp-append-version="true"></script>
+    @* <script src="~/js/site.js" asp-append-version="true"></script> *@
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>
