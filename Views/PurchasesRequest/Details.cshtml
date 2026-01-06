@@ -1,0 +1,431 @@
+@using CorpProcure.Models.Enums
+@using CorpProcure.DTOs.PurchaseRequest
+@model PurchaseRequestDto
+@{
+    ViewData["Title"] = "Request Details";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Purchase Request Details</h3>
+
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="PurchasesRequest" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <span class="text-secondary fw-medium hover">Purchase Requests</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Details</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row">
+        <div class="col-xxl-8 col-lg-7">
+            <!-- Request Info Card -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body py-4 px-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fs-18 fw-medium mb-0">@Model.RequestNumber</h4>
+                        @{
+                            var statusClass = Model.Status switch
+                            {
+                                RequestStatus.Draft => "bg-secondary bg-opacity-10 text-secondary",
+                                RequestStatus.PendingManager => "bg-warning bg-opacity-10 text-warning",
+                                RequestStatus.PendingFinance => "bg-info bg-opacity-10 text-info",
+                                RequestStatus.Approved => "bg-success bg-opacity-10 text-success",
+                                RequestStatus.Rejected => "bg-danger bg-opacity-10 text-danger",
+                                RequestStatus.Cancelled => "bg-dark bg-opacity-10 text-dark",
+                                _ => "bg-secondary bg-opacity-10 text-secondary"
+                            };
+                            var statusText = Model.Status switch
+                            {
+                                RequestStatus.Draft => "Draft",
+                                RequestStatus.PendingManager => "Pending Manager Approval",
+                                RequestStatus.PendingFinance => "Pending Finance Approval",
+                                RequestStatus.Approved => "Approved",
+                                RequestStatus.Rejected => "Rejected",
+                                RequestStatus.Cancelled => "Cancelled",
+                                _ => "Unknown"
+                            };
+                        }
+                        <span class="badge @statusClass p-2 fs-12 fw-normal">@statusText</span>
+                    </div>
+                    
+                    <div class="default-table-area">
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row" style="width: 30%;">Description</th>
+                                        <td>@Model.Description</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Justification</th>
+                                        <td>@Model.Justification</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Requester</th>
+                                        <td>@Model.RequesterName</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Department</th>
+                                        <td>@Model.DepartmentName</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Request Date</th>
+                                        <td>@Model.RequestDate.ToString("dd MMM yyyy HH:mm")</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Total Amount</th>
+                                        <td class="fw-bold text-primary">Rp @Model.TotalAmount.ToString("N0")</td>
+                                    </tr>
+                                    @if (!string.IsNullOrEmpty(Model.PoNumber))
+                                    {
+                                        <tr>
+                                            <th scope="row">PO Number</th>
+                                            <td class="fw-bold text-success">@Model.PoNumber</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">PO Date</th>
+                                            <td>@Model.PoDate?.ToString("dd MMM yyyy")</td>
+                                        </tr>
+                                    }
+                                    @if (Model.Status == RequestStatus.Rejected && !string.IsNullOrEmpty(Model.RejectionReason))
+                                    {
+                                        <tr class="table-danger">
+                                            <th scope="row">Rejection Reason</th>
+                                            <td>@Model.RejectionReason</td>
+                                        </tr>
+                                        <tr class="table-danger">
+                                            <th scope="row">Rejected By</th>
+                                            <td>@Model.RejectedByName on @Model.RejectedDate?.ToString("dd MMM yyyy HH:mm")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Items Card -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fs-18 mb-4">Request Items (@Model.Items.Count)</h4>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Item Name</th>
+                                    <th scope="col">Description</th>
+                                    <th scope="col" class="text-center">Qty</th>
+                                    <th scope="col" class="text-end">Unit Price</th>
+                                    <th scope="col" class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ var itemNo = 1; }
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td>@itemNo</td>
+                                        <td class="fw-medium">@item.ItemName</td>
+                                        <td class="text-muted">@(item.Description ?? "-")</td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end">Rp @item.UnitPrice.ToString("N0")</td>
+                                        <td class="text-end fw-medium">Rp @item.TotalPrice.ToString("N0")</td>
+                                    </tr>
+                                    itemNo++;
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light">
+                                    <td colspan="5" class="text-end fw-bold">Total:</td>
+                                    <td class="text-end fw-bold text-primary">Rp @Model.TotalAmount.ToString("N0")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Approval History Card -->
+            @if (Model.ApprovalHistories != null && Model.ApprovalHistories.Any())
+            {
+                <div class="card bg-white border-0 rounded-3 mb-4">
+                    <div class="card-body p-4">
+                        <h4 class="fs-18 mb-4">Approval History</h4>
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Level</th>
+                                        <th scope="col">Approver</th>
+                                        <th scope="col">Action</th>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Comments</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var approval in Model.ApprovalHistories.OrderBy(a => a.ApprovalLevel))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-info bg-opacity-10 text-info p-2 fs-12 fw-normal">
+                                                    Level @approval.ApprovalLevel (@(approval.ApprovalLevel == 1 ? "Manager" : "Finance"))
+                                                </span>
+                                            </td>
+                                            <td>@approval.ApproverName</td>
+                                            <td>
+                                                @switch (approval.Action)
+                                                {
+                                                    case ApprovalAction.Approved:
+                                                        <span class="badge bg-success bg-opacity-10 text-success p-2 fs-12 fw-normal">Approved</span>
+                                                        break;
+                                                    case ApprovalAction.Rejected:
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger p-2 fs-12 fw-normal">Rejected</span>
+                                                        break;
+                                                    case ApprovalAction.Cancelled:
+                                                        <span class="badge bg-dark bg-opacity-10 text-dark p-2 fs-12 fw-normal">Cancelled</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td>@approval.ApprovedAt.ToString("dd MMM yyyy HH:mm")</td>
+                                            <td>@(string.IsNullOrEmpty(approval.Comments) ? "-" : approval.Comments)</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Pending Approval Info -->
+                <div class="card bg-white border-0 rounded-3 mb-4">
+                    <div class="card-body p-4">
+                        <h4 class="fs-18 mb-4">Approval Progress</h4>
+                        <div class="d-flex align-items-center gap-4">
+                            <div class="text-center">
+                                <div class="wh-50 lh-50 rounded-circle @(Model.ManagerApproverId != null ? "bg-success" : Model.Status == RequestStatus.PendingManager ? "bg-warning" : "bg-light") text-white d-inline-flex align-items-center justify-content-center mb-2">
+                                    @if (Model.ManagerApproverId != null)
+                                    {
+                                        <i class="ri-check-line fs-20"></i>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-dark">1</span>
+                                    }
+                                </div>
+                                <p class="mb-0 small">Manager</p>
+                                @if (Model.ManagerApprovalDate != null)
+                                {
+                                    <small class="text-muted">@Model.ManagerApprovalDate?.ToString("dd MMM")</small>
+                                }
+                            </div>
+                            <div class="flex-grow-1">
+                                <hr class="@(Model.ManagerApproverId != null ? "border-success" : "")">
+                            </div>
+                            <div class="text-center">
+                                <div class="wh-50 lh-50 rounded-circle @(Model.FinanceApproverId != null ? "bg-success" : Model.Status == RequestStatus.PendingFinance ? "bg-warning" : "bg-light") text-white d-inline-flex align-items-center justify-content-center mb-2">
+                                    @if (Model.FinanceApproverId != null)
+                                    {
+                                        <i class="ri-check-line fs-20"></i>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-dark">2</span>
+                                    }
+                                </div>
+                                <p class="mb-0 small">Finance</p>
+                                @if (Model.FinanceApprovalDate != null)
+                                {
+                                    <small class="text-muted">@Model.FinanceApprovalDate?.ToString("dd MMM")</small>
+                                }
+                            </div>
+                            <div class="flex-grow-1">
+                                <hr class="@(Model.FinanceApproverId != null ? "border-success" : "")">
+                            </div>
+                            <div class="text-center">
+                                <div class="wh-50 lh-50 rounded-circle @(Model.Status == RequestStatus.Approved ? "bg-success" : "bg-light") text-white d-inline-flex align-items-center justify-content-center mb-2">
+                                    @if (Model.Status == RequestStatus.Approved)
+                                    {
+                                        <i class="ri-check-double-line fs-20"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="ri-flag-line fs-20 text-dark"></i>
+                                    }
+                                </div>
+                                <p class="mb-0 small">Complete</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            <!-- Action Buttons -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap gap-3">
+                        @if (Model.Status == RequestStatus.Draft || Model.Status == RequestStatus.PendingManager || Model.Status == RequestStatus.PendingFinance)
+                        {
+                            <a asp-action="Cancel" asp-route-id="@Model.Id" class="btn btn-danger py-2 px-4 fw-medium fs-16 text-white">
+                                <i class="ri-close-circle-line me-1"></i> Cancel Request
+                            </a>
+                        }
+                        
+                        @if (Model.Status == RequestStatus.Approved && string.IsNullOrEmpty(Model.PoNumber))
+                        {
+                            <a asp-action="GeneratePO" asp-route-id="@Model.Id" class="btn btn-success py-2 px-4 fw-medium fs-16 text-white">
+                                <i class="ri-file-text-line me-1"></i> Generate PO
+                            </a>
+                        }
+                        
+                        <a asp-action="Index" class="btn btn-outline-primary py-2 px-4 fw-medium fs-16">
+                            <i class="ri-arrow-left-line me-1"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-xxl-4 col-lg-5">
+            <!-- Requester Info -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fs-18 mb-4">Requester Information</h4>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-user-line wh-40 lh-40 d-inline-block bg-body-bg text-center fs-18 text-primary rounded-circle"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h4 class="mb-1 fs-14 fw-medium">Name</h4>
+                                <span class="fs-15">@Model.RequesterName</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-building-line wh-40 lh-40 d-inline-block bg-body-bg text-center fs-18 text-primary rounded-circle"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h4 class="mb-1 fs-14 fw-medium">Department</h4>
+                                <span class="fs-15">@Model.DepartmentName</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-calendar-line wh-40 lh-40 d-inline-block bg-body-bg text-center fs-18 text-primary rounded-circle"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h4 class="mb-1 fs-14 fw-medium">Request Date</h4>
+                                <span class="fs-15">@Model.RequestDate.ToString("dd MMM yyyy")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Manager Approval Info -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fs-18 mb-4">Manager Approval (Level 1)</h4>
+                    @if (Model.ManagerApproverId != null)
+                    {
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="ri-checkbox-circle-line wh-40 lh-40 d-inline-block bg-success bg-opacity-10 text-center fs-18 text-success rounded-circle"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h4 class="mb-1 fs-14 fw-medium">Approved By</h4>
+                                    <span class="fs-15">@Model.ManagerApproverName</span>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="ri-calendar-check-line wh-40 lh-40 d-inline-block bg-success bg-opacity-10 text-center fs-18 text-success rounded-circle"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h4 class="mb-1 fs-14 fw-medium">Approval Date</h4>
+                                    <span class="fs-15">@Model.ManagerApprovalDate?.ToString("dd MMM yyyy HH:mm")</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (Model.Status == RequestStatus.PendingManager)
+                    {
+                        <div class="alert alert-warning bg-warning bg-opacity-10 border-0 p-3 mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="ri-time-line fs-18 me-2"></i>
+                                <span>Awaiting manager approval</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-muted">Not yet required</div>
+                    }
+                </div>
+            </div>
+            
+            <!-- Finance Approval Info -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fs-18 mb-4">Finance Approval (Level 2)</h4>
+                    @if (Model.FinanceApproverId != null)
+                    {
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="ri-checkbox-circle-line wh-40 lh-40 d-inline-block bg-success bg-opacity-10 text-center fs-18 text-success rounded-circle"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h4 class="mb-1 fs-14 fw-medium">Approved By</h4>
+                                    <span class="fs-15">@Model.FinanceApproverName</span>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="ri-calendar-check-line wh-40 lh-40 d-inline-block bg-success bg-opacity-10 text-center fs-18 text-success rounded-circle"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h4 class="mb-1 fs-14 fw-medium">Approval Date</h4>
+                                    <span class="fs-15">@Model.FinanceApprovalDate?.ToString("dd MMM yyyy HH:mm")</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (Model.Status == RequestStatus.PendingFinance)
+                    {
+                        <div class="alert alert-info bg-info bg-opacity-10 border-0 p-3 mb-0">
+                            <div class="d-flex align-items-center">
+                                <i class="ri-time-line fs-18 me-2"></i>
+                                <span>Awaiting finance approval</span>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-muted">Not yet required</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,127 @@
+@using CorpProcure.Models
+@using CorpProcure.Models.Enums
+@model IEnumerable<PurchaseRequest>
+@{
+    ViewData["Title"] = "My Approvals";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">My Pending Approvals</h3>
+
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="PurchasesRequest" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <span class="text-secondary fw-medium hover">Purchase Requests</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">My Approvals</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="card bg-white border-0 rounded-3 mb-4">
+        <div class="card-body p-0">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-4">
+                <h5 class="card-title mb-0">
+                    <i class="ri-checkbox-circle-line me-2 text-primary"></i>
+                    Pending Approvals
+                </h5>
+                
+                <a asp-action="Index" class="btn btn-outline-primary py-1 px-2 px-sm-4 fs-14 fw-medium rounded-3 hover-bg">
+                    <span class="py-sm-1 d-block">
+                        <i class="ri-arrow-left-line d-none d-sm-inline-block"></i>
+                        <span>Back to All Requests</span>
+                    </span>
+                </a>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="ri-checkbox-circle-line fs-48 text-success d-block mb-3"></i>
+                    <h5 class="mb-2">All Caught Up!</h5>
+                    <p class="text-muted">You have no pending approvals at this time.</p>
+                </div>
+            }
+            else
+            {
+                <div class="default-table-area style-two default-table-width">
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Request #</th>
+                                    <th scope="col">Requester</th>
+                                    <th scope="col">Department</th>
+                                    <th scope="col">Title</th>
+                                    <th scope="col">Amount</th>
+                                    <th scope="col">Approval Level</th>
+                                    <th scope="col">Request Date</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    var approvalLevel = item.Status == RequestStatus.PendingManager ? 1 : 2;
+                                    var approvalType = approvalLevel == 1 ? "Manager" : "Finance";
+                                    
+                                    <tr>
+                                        <td class="text-body fw-medium">@item.RequestNumber</td>
+                                        <td class="text-body">@item.Requester?.FullName</td>
+                                        <td class="text-body">@item.Department?.Name</td>
+                                        <td>
+                                            <a asp-action="Details" asp-route-id="@item.Id" class="text-body">
+                                                @item.Title
+                                            </a>
+                                        </td>
+                                        <td class="text-body fw-medium">Rp @item.TotalAmount.ToString("N0")</td>
+                                        <td>
+                                            <span class="badge @(approvalLevel == 1 ? "bg-warning bg-opacity-10 text-warning" : "bg-info bg-opacity-10 text-info") p-2 fs-12 fw-normal">
+                                                Level @approvalLevel (@approvalType)
+                                            </span>
+                                        </td>
+                                        <td class="text-body">@item.CreatedAt.ToString("dd MMM yyyy")</td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <a asp-action="Approve" asp-route-id="@item.Id" class="btn btn-sm btn-primary" title="Review & Approve">
+                                                    <i class="ri-checkbox-circle-line me-1"></i> Review
+                                                </a>
+                                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary" title="View Details">
+                                                    <i class="ri-eye-line"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <div class="alert alert-info bg-info bg-opacity-10 border-0 p-3 mb-0">
+                        <div class="d-flex align-items-center">
+                            <i class="ri-information-line fs-20 me-2"></i>
+                            <span>
+                                You have <strong>@Model.Count()</strong> request(s) pending your approval.
+                                Click "Review" to approve or reject each request.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

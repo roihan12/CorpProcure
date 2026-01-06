@@ -1,0 +1,169 @@
+@using CorpProcure.Models.Enums
+@{
+    ViewData["Title"] = "Purchase Request Reports";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var startDate = ViewData["StartDate"] as string ?? DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd");
+    var endDate = ViewData["EndDate"] as string ?? DateTime.Now.ToString("yyyy-MM-dd");
+}
+
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Purchase Request Reports</h3>
+
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="PurchasesRequest" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <span class="text-secondary fw-medium hover">Purchase Requests</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Reports</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="card bg-white border-0 rounded-3 mb-4">
+        <div class="card-body p-0">
+            <div class="p-4 border-bottom">
+                <h5 class="card-title mb-0 d-flex align-items-center">
+                    <i class="material-symbols-outlined fs-20 me-2">summarize</i>
+                    Export Purchase Request Data
+                </h5>
+            </div>
+            <div class="p-4">
+                <form asp-action="ExportReport" method="post">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="startDate" class="form-label fw-medium">Start Date</label>
+                                <input type="date" id="startDate" name="startDate" class="form-control" value="@startDate" required />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="endDate" class="form-label fw-medium">End Date</label>
+                                <input type="date" id="endDate" name="endDate" class="form-control" value="@endDate" required />
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="status" class="form-label fw-medium">Status (Optional)</label>
+                                <select id="status" name="status" class="form-select">
+                                    <option value="">All Statuses</option>
+                                    <option value="@((int)RequestStatus.Draft)">Draft</option>
+                                    <option value="@((int)RequestStatus.PendingManager)">Pending Manager</option>
+                                    <option value="@((int)RequestStatus.PendingFinance)">Pending Finance</option>
+                                    <option value="@((int)RequestStatus.Approved)">Approved</option>
+                                    <option value="@((int)RequestStatus.Rejected)">Rejected</option>
+                                    <option value="@((int)RequestStatus.Cancelled)">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="departmentId" class="form-label fw-medium">Department (Optional)</label>
+                                <select id="departmentId" name="departmentId" class="form-select">
+                                    <option value="">All Departments</option>
+                                    @if (ViewBag.Departments != null)
+                                    {
+                                        foreach (var dept in ViewBag.Departments)
+                                        {
+                                            <option value="@dept.Value">@dept.Text</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info bg-info bg-opacity-10 border-0 p-3 mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="ri-information-line fs-20 me-2"></i>
+                            <span>The report will include all purchase requests within the selected date range. Filter by status or department to narrow down the results.</span>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="mb-3">Report Includes:</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Request Number & Title</li>
+                                        <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Requester & Department</li>
+                                        <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Request Date</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Total Amount</li>
+                                        <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Status & Approval Info</li>
+                                        <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Items Count</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>PO Number (if generated)</li>
+                                        <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Approval Dates</li>
+                                        <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Rejection Reason (if any)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <a asp-action="Index" class="btn btn-light py-1 px-4 fs-14 fw-medium rounded-3">
+                            <span class="py-1 d-block">
+                                <i class="ri-arrow-left-line d-none d-sm-inline-block"></i>
+                                <span>Back to List</span>
+                            </span>
+                        </a>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="format" value="excel" class="btn btn-success py-1 px-4 fs-14 fw-medium rounded-3">
+                                <span class="py-1 d-block">
+                                    <i class="ri-file-excel-2-line me-1"></i>
+                                    <span>Export to Excel</span>
+                                </span>
+                            </button>
+                            <button type="submit" name="format" value="pdf" class="btn btn-danger py-1 px-4 fs-14 fw-medium rounded-3">
+                                <span class="py-1 d-block">
+                                    <i class="ri-file-pdf-line me-1"></i>
+                                    <span>Export to PDF</span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('form').submit(function(e) {
+                const startDate = new Date($('#startDate').val());
+                const endDate = new Date($('#endDate').val());
+                
+                if (endDate < startDate) {
+                    e.preventDefault();
+                    alert('End date must be after or equal to start date');
+                    return false;
+                }
+                
+                return true;
+            });
+        });
+    </script>
+}

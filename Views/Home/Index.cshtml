@@ -1,3 +1,4 @@
+@using CorpProcure.Models.Enums
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -5,9 +6,11 @@
     // Get dashboard stats from ViewData
     var stats = ViewData["DashboardStats"] as dynamic;
     var statusDistribution = ViewData["StatusDistribution"] as IEnumerable<dynamic>;
-    var vehicleStatuses = ViewData["VehicleStatuses"] as IEnumerable<dynamic>;
-    var monthlyFuelData = ViewData["MonthlyFuelData"] as IEnumerable<dynamic>;
-    var regionDistribution = ViewData["RegionDistribution"] as IEnumerable<dynamic>;
+    var departmentSpending = ViewData["DepartmentSpending"] as IEnumerable<dynamic>;
+    var monthlyTrend = ViewData["MonthlyTrend"] as IEnumerable<dynamic>;
+    var budgetUtilization = ViewData["BudgetUtilization"] as IEnumerable<dynamic>;
+    var recentRequests = ViewData["RecentRequests"] as IEnumerable<dynamic>;
+    var pendingApprovals = ViewData["PendingApprovals"] as IEnumerable<dynamic>;
     
     bool hasError = ViewData["Error"] != null;
 }
@@ -32,98 +35,105 @@
     <div class="row">
         <div class="col-lg-6">
             <div class="row">
+                <!-- Pending Requests -->
                 <div class="col-sm-6">
                     <div class="card border-0 rounded-3 mb-4"
                         style="background: linear-gradient(108deg, #3A4252 0%, #23272E 100%);">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <span
-                                    class="d-inline-block px-3 bg-success bg-opacity-25 text-success border border-success rounded-pill fs-12 fw-medium">+@(stats?.ReservationGrowth ?? 0)%</span>
+                                    class="d-inline-block px-3 bg-warning bg-opacity-25 text-warning border border-warning rounded-pill fs-12 fw-medium">Pending</span>
                                 <div class="text-end">
-                                    <span class="ms-2 fs-12" style="color: #B1BBC8;">Last 30 days</span>
-                                    <span class="fs-12 fw-bold text-success d-block">+@(stats?.ReservationsLastMonth ?? 0) trips</span>
+                                    <span class="ms-2 fs-12" style="color: #B1BBC8;">Awaiting Approval</span>
+                                    <span class="fs-12 fw-bold text-warning d-block">@(stats?.PendingManager ?? 0) Manager | @(stats?.PendingFinance ?? 0) Finance</span>
                                 </div>
                             </div>
 
                             <div class="d-flex align-items-end">
                                 <div class="flex-grow-1">
-                                    <span class="d-block mb-1" style="color: #B1BBC8;">Active Reservations</span>
-                                    <h4 class="fs-20 mb-0 text-white">@(stats?.ActiveReservations ?? 0)</h4>
+                                    <span class="d-block mb-1" style="color: #B1BBC8;">Pending Requests</span>
+                                    <h4 class="fs-20 mb-0 text-white">@(stats?.TotalPending ?? 0)</h4>
                                 </div>
                                 <div class="flex-shrink-0 me-3 me-auto">
-                                    <i class="ri-calendar-check-line fs-24 text-success bg-success d-inline-block text-center rounded-circle text-white stats-icon"></i>
+                                    <i class="ri-time-line fs-24 text-warning bg-warning d-inline-block text-center rounded-circle text-white stats-icon"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Approved This Month -->
                 <div class="col-sm-6">
                     <div class="card border-0 rounded-3 bg-white mb-4">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <span
-                                    class="d-inline-block px-3 bg-success bg-opacity-10 text-success border border-success rounded-pill fs-12 fw-medium">+@(stats?.VehicleGrowth ?? 0)%</span>
+                                    class="d-inline-block px-3 bg-success bg-opacity-10 text-success border border-success rounded-pill fs-12 fw-medium">+@(stats?.ApprovedGrowth ?? 0)%</span>
                                 <div class="text-end">
-                                    <span class="ms-2 fs-12">Last 30 days</span>
-                                    <span class="fs-12 fw-bold text-primary-div d-block">+@(stats?.VehicleLastMonth ?? 0) units</span>
+                                    <span class="ms-2 fs-12">This Month</span>
+                                    <span class="fs-12 fw-bold text-success d-block">@(stats?.ApprovedThisMonth ?? 0) approved</span>
                                 </div>
                             </div>
 
                             <div class="d-flex align-items-end">
                                 <div class="flex-grow-1">
-                                    <span class="d-block mb-1">Available Vehicles</span>
-                                    <h4 class="fs-20 mb-0">@(stats?.AvailableVehicles ?? 0)</h4>
+                                    <span class="d-block mb-1">Approved Requests</span>
+                                    <h4 class="fs-20 mb-0">@(stats?.TotalApproved ?? 0)</h4>
                                 </div>
                                 <div class="flex-shrink-0 me-3 me-auto">
-                                    <i class="ri-truck-line fs-24 text-white bg-primary-div d-inline-block text-center rounded-circle text-white stats-icon"></i>
+                                    <i class="ri-checkbox-circle-line fs-24 text-white bg-success d-inline-block text-center rounded-circle text-white stats-icon"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Total Amount This Month -->
                 <div class="col-sm-6">
                     <div class="card border-0 rounded-3 bg-white mb-4">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <span
-                                    class="d-inline-block px-3 bg-success bg-opacity-10 text-success border border-success rounded-pill fs-12 fw-medium">+@(stats?.DriverGrowth ?? 0)%</span>
+                                    class="d-inline-block px-3 bg-primary bg-opacity-10 text-primary border border-primary rounded-pill fs-12 fw-medium">This Month</span>
                                 <div class="text-end">
-                                    <span class="ms-2 fs-12">Last 30 days</span>
-                                    <span class="fs-12 fw-bold text-primary d-block">+@(stats?.DriverLastMonth ?? 0)</span>
+                                    <span class="ms-2 fs-12">vs Last Month</span>
+                                    <span class="fs-12 fw-bold text-primary d-block">+@(stats?.AmountGrowth ?? 0)%</span>
                                 </div>
                             </div>
 
                             <div class="d-flex align-items-end">
                                 <div class="flex-grow-1">
-                                    <span class="d-block mb-1">Active Drivers</span>
-                                    <h4 class="fs-20 mb-0">@(stats?.ActiveDrivers ?? 0)</h4>
+                                    <span class="d-block mb-1">Total Amount</span>
+                                    <h4 class="fs-20 mb-0">Rp @(stats?.TotalAmountThisMonth?.ToString("N0") ?? "0")</h4>
                                 </div>
                                 <div class="flex-shrink-0 me-3 me-auto">
-                                    <i class="ri-user-line fs-24 text-white bg-primary d-inline-block text-center rounded-circle text-white stats-icon"></i>
+                                    <i class="ri-money-dollar-circle-line fs-24 text-white bg-primary d-inline-block text-center rounded-circle text-white stats-icon"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Rejected Requests -->
                 <div class="col-sm-6">
                     <div class="card border-0 rounded-3 bg-white mb-4">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <span
-                                    class="d-inline-block px-3 bg-danger bg-opacity-10 text-danger border border-danger rounded-pill fs-12 fw-medium">+@(stats?.FuelGrowth ?? 0)%</span>
+                                    class="d-inline-block px-3 bg-danger bg-opacity-10 text-danger border border-danger rounded-pill fs-12 fw-medium">This Month</span>
                                 <div class="text-end">
-                                    <span class="ms-2 fs-12">Last 30 days</span>
-                                    <span class="fs-12 fw-bold text-danger d-block">+@(stats?.FuelConsumptionLastMonth ?? 0)L</span>
+                                    <span class="ms-2 fs-12">Rejection Rate</span>
+                                    <span class="fs-12 fw-bold text-danger d-block">@(stats?.RejectionRate ?? 0)%</span>
                                 </div>
                             </div>
 
                             <div class="d-flex align-items-end">
                                 <div class="flex-grow-1">
-                                    <span class="d-block mb-1">Fuel Consumption</span>
-                                    <h4 class="fs-20 mb-0">@(stats?.FuelConsumption ?? 0)L</h4>
+                                    <span class="d-block mb-1">Rejected Requests</span>
+                                    <h4 class="fs-20 mb-0">@(stats?.RejectedThisMonth ?? 0)</h4>
                                 </div>
                                 <div class="flex-shrink-0 me-3 me-auto">
-                                    <i class="ri-gas-station-line fs-24 text-white bg-danger d-inline-block text-center rounded-circle text-white stats-icon"></i>
+                                    <i class="ri-close-circle-line fs-24 text-white bg-danger d-inline-block text-center rounded-circle text-white stats-icon"></i>
                                 </div>
                             </div>
                         </div>
@@ -135,17 +145,18 @@
             <div class="card border-0 rounded-3 bg-white mb-4">
                 <div class="card-body p-4">
                     <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
-                        <h3 class="mb-0">Reservation Status</h3>
-                        <span class="fs-12">Last 30 days</span>
+                        <h3 class="mb-0">Request Status Distribution</h3>
+                        <span class="fs-12">All Time</span>
                     </div>
 
                     <div style="margin: -24px -40px -19px -17px;">
-                        <div id="reservation_status_chart"></div>
+                        <div id="request_status_chart"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    
     <div class="row">
         <div class="col-xxl-8">
             <div class="row">
@@ -153,11 +164,11 @@
                     <div class="card border-0 rounded-3 bg-white mb-4" style="height: 400px;">
                         <div class="card-body p-4 h-100 d-flex flex-column">
                             <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
-                                <span>Fuel Consumption Trend</span>
+                                <span>Monthly Request Trend</span>
                                 <span class="fs-12">Per Month</span>
                             </div>
                             <div class="flex-grow-1 d-flex align-items-center justify-content-center" style="margin: -24px -22px -26px -18px;">
-                                <canvas id="fuel_consumption_chart"></canvas>
+                                <canvas id="monthly_trend_chart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -166,11 +177,11 @@
                     <div class="card border-0 rounded-3 bg-white mb-4" style="height: 400px;">
                         <div class="card-body p-4 h-100 d-flex flex-column">
                             <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
-                                <span>Vehicle Status</span>
-                                <span class="fs-12">Current Status</span>
+                                <span>Department Spending</span>
+                                <span class="fs-12">This Month</span>
                             </div>
                             <div class="flex-grow-1 d-flex align-items-center justify-content-center" style="margin: -24px -6px -25px -17px;">
-                                <div id="vehicle_status_chart" style="width:100%;height:100%;"></div>
+                                <div id="department_spending_chart" style="width:100%;height:100%;"></div>
                             </div>
                         </div>
                     </div>
@@ -180,15 +191,10 @@
             <div class="card bg-white border-0 rounded-3 mb-4">
                 <div class="card-body p-0">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-4">
-                        <h3 class="mb-0">Recent Reservations</h3>
-                        <select
-                            class="form-select month-select form-control w-135 bg-border-color border-color bg-transparent"
-                            id="reservationPeriodFilter"
-                            aria-label="Default select example">
-                            <option selected value="30">Last 30 days</option>
-                            <option value="7">Last 7 days</option>
-                            <option value="90">Last 90 days</option>
-                        </select>
+                        <h3 class="mb-0">Recent Purchase Requests</h3>
+                        <a asp-controller="PurchasesRequest" asp-action="Index" class="btn btn-outline-primary btn-sm">
+                            View All <i class="ri-arrow-right-line ms-1"></i>
+                        </a>
                     </div>
 
                     <div class="default-table-area style-two transaction-history tracking-order">
@@ -196,16 +202,66 @@
                             <table class="table align-middle">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Reservation ID</th>
+                                        <th scope="col">Request #</th>
                                         <th scope="col">Requester</th>
-                                        <th scope="col">Start Date</th>
-                                        <th scope="col">Vehicle</th>
-                                        <th scope="col">Purpose</th>
+                                        <th scope="col">Department</th>
+                                        <th scope="col">Title</th>
+                                        <th scope="col">Amount</th>
                                         <th scope="col">Status</th>
                                     </tr>
                                 </thead>
-                                <tbody id="recentReservationsTable">
-                                    
+                                <tbody>
+                                    @if (recentRequests != null && recentRequests.Any())
+                                    {
+                                        foreach (var request in recentRequests.Take(5))
+                                        {
+                                            <tr>
+                                                <td class="text-body">@request.RequestNumber</td>
+                                                <td class="text-body">@request.RequesterName</td>
+                                                <td class="text-body">@request.DepartmentName</td>
+                                                <td>
+                                                    <a asp-controller="PurchasesRequest" asp-action="Details" asp-route-id="@request.Id" class="text-body">
+                                                        @request.Title
+                                                    </a>
+                                                </td>
+                                                <td class="text-body">Rp @request.TotalAmount.ToString("N0")</td>
+                                                <td>
+                                                    @{
+                                                        var statusClass = request.Status switch
+                                                        {
+                                                            RequestStatus.Draft => "bg-secondary bg-opacity-10 text-secondary",
+                                                            RequestStatus.PendingManager => "bg-warning bg-opacity-10 text-warning",
+                                                            RequestStatus.PendingFinance => "bg-info bg-opacity-10 text-info",
+                                                            RequestStatus.Approved => "bg-success bg-opacity-10 text-success",
+                                                            RequestStatus.Rejected => "bg-danger bg-opacity-10 text-danger",
+                                                            RequestStatus.Cancelled => "bg-dark bg-opacity-10 text-dark",
+                                                            _ => "bg-secondary bg-opacity-10 text-secondary"
+                                                        };
+                                                        var statusText = request.Status switch
+                                                        {
+                                                            RequestStatus.Draft => "Draft",
+                                                            RequestStatus.PendingManager => "Pending Manager",
+                                                            RequestStatus.PendingFinance => "Pending Finance",
+                                                            RequestStatus.Approved => "Approved",
+                                                            RequestStatus.Rejected => "Rejected",
+                                                            RequestStatus.Cancelled => "Cancelled",
+                                                            _ => "Unknown"
+                                                        };
+                                                    }
+                                                    <span class="badge @statusClass p-2 fs-12 fw-normal">@statusText</span>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                <i class="ri-inbox-line fs-24 d-block mb-2"></i>
+                                                No recent requests found
+                                            </td>
+                                        </tr>
+                                    }
                                 </tbody>
                             </table>
                         </div>
@@ -216,31 +272,67 @@
         <div class="col-xxl-4">
             <div class="card bg-white border-0 rounded-3 mb-4">
                 <div class="card-body p-4">
-                    <h3 class="mb-4">Upcoming Maintenance</h3>
-                    <div id="upcomingMaintenanceList">
-                      
+                    <h3 class="mb-4">Pending Approvals</h3>
+                    <div id="pendingApprovalsList">
+                        @if (pendingApprovals != null && pendingApprovals.Any())
+                        {
+                            foreach (var approval in pendingApprovals.Take(5))
+                            {
+                                <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                    <div class="flex-shrink-0">
+                                        <i class="ri-file-list-3-line wh-40 lh-40 d-inline-block bg-primary bg-opacity-10 text-center fs-18 text-primary rounded-circle"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1 fs-14">@approval.RequestNumber</h6>
+                                        <span class="fs-12 text-muted">@approval.RequesterName - Rp @approval.TotalAmount.ToString("N0")</span>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <a asp-controller="PurchasesRequest" asp-action="Approve" asp-route-id="@approval.Id" class="btn btn-sm btn-outline-primary">
+                                            Review
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted py-4">
+                                <i class="ri-checkbox-circle-line fs-24 d-block mb-2"></i>
+                                No pending approvals
+                            </div>
+                        }
                     </div>
-                    <div class="text-center mt-4">
-                        <a href="/Maintenance" class="btn btn-outline-primary btn-sm">
-                            <i class="ri-eye-line me-1"></i> View All Maintenance
-                        </a>
-                    </div>
+                    @if (pendingApprovals != null && pendingApprovals.Count() > 5)
+                    {
+                        <div class="text-center mt-4">
+                            <a asp-controller="PurchasesRequest" asp-action="MyApprovals" class="btn btn-outline-primary btn-sm">
+                                <i class="ri-eye-line me-1"></i> View All Approvals (@pendingApprovals.Count())
+                            </a>
+                        </div>
+                    }
                 </div>
             </div>
             
             <div class="card bg-white border-0 rounded-3 mb-4">
                 <div class="card-body p-4">
-                    <h3 class="mb-4">Regional Overview</h3>
-                    <div id="region_map_chart" style="height: 300px;"></div>
+                    <h3 class="mb-4">Budget Utilization</h3>
+                    <div id="budget_utilization_chart" style="height: 300px;"></div>
                     
                     <div class="mt-4">
-                        @if (regionDistribution != null)
+                        @if (budgetUtilization != null)
                         {
-                            foreach (var region in regionDistribution)
+                            foreach (var dept in budgetUtilization.Take(4))
                             {
-                                <div class="d-flex justify-content-between mb-2">
-                                    <div>@region.Region</div>
-                                    <div class="fw-medium">@region.Count vehicles</div>
+                                var utilization = dept.Budget > 0 ? (dept.Used / dept.Budget * 100) : 0;
+                                var progressClass = utilization > 90 ? "bg-danger" : utilization > 70 ? "bg-warning" : "bg-success";
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="fs-13">@dept.DepartmentName</span>
+                                        <span class="fs-13 fw-medium">@utilization.ToString("N0")%</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar @progressClass" role="progressbar" style="width: @utilization%" aria-valuenow="@utilization" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
                                 </div>
                             }
                         }
@@ -251,51 +343,15 @@
     </div>
 </div>
 
-@functions {
-
-    
-    public string GetMaintenanceBadgeColor(DateTime date)
-    {
-        var daysUntil = (date - DateTime.Today).Days;
-        
-        if (daysUntil < 0)
-            return "bg-danger";
-        if (daysUntil <= 3)
-            return "bg-warning";
-        if (daysUntil <= 7)
-            return "bg-warning";
-            
-        return "bg-info";
-    }
-    
-    public string GetMaintenanceStatus(DateTime date)
-    {
-        var daysUntil = (date - DateTime.Today).Days;
-        
-        if (daysUntil < 0)
-            return "Overdue";
-        if (daysUntil == 0)
-            return "Today";
-        if (daysUntil == 1)
-            return "Tomorrow";
-        if (daysUntil <= 3)
-            return $"Due in {daysUntil} days";
-        if (daysUntil <= 14)
-            return $"Due in {daysUntil} days";
-            
-        return $"In {daysUntil} days";
-    }
-}
-
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             try {
-                // Reservation Status Chart (Donut Chart)
-                var statusChartElement = document.querySelector("#reservation_status_chart");
+                // Request Status Distribution Chart (Donut Chart)
+                var statusChartElement = document.querySelector("#request_status_chart");
                 if (statusChartElement) {
-                    var reservationStatusOptions = {
+                    var requestStatusOptions = {
                         series: [
                             @if (statusDistribution != null && statusDistribution.Any())
                             {
@@ -303,7 +359,7 @@
                             }
                             else
                             {
-                                <text>45, 25, 20, 10, 5, 0</text>
+                                <text>10, 15, 8, 25, 5, 3</text>
                             }
                         ],
                         chart: {
@@ -317,10 +373,10 @@
                             }
                             else
                             {
-                                <text>'Approved', 'Pending', 'Completed', 'Rejected', 'Cancelled', 'Partially Approved'</text>
+                                <text>'Draft', 'Pending Manager', 'Pending Finance', 'Approved', 'Rejected', 'Cancelled'</text>
                             }
                         ],
-                        colors: ['#28a745', '#ffc107', '#17a2b8', '#dc3545', '#6c757d', '#007bff'],
+                        colors: ['#6c757d', '#ffc107', '#17a2b8', '#28a745', '#dc3545', '#343a40'],
                         legend: {
                             position: 'bottom'
                         },
@@ -338,26 +394,26 @@
                     };
                     
                     try {
-                        var reservationStatusChart = new ApexCharts(statusChartElement, reservationStatusOptions);
-                        reservationStatusChart.render();
+                        var requestStatusChart = new ApexCharts(statusChartElement, requestStatusOptions);
+                        requestStatusChart.render();
                     } catch (err) {
-                        console.error("Error rendering Reservation Status chart:", err);
+                        console.error("Error rendering Request Status chart:", err);
                         statusChartElement.innerHTML = "<div class='alert alert-danger'>Could not load chart</div>";
                     }
                 }
                 
-                // Vehicle Status Chart (Pie Chart)
-                var vehicleChartElement = document.querySelector("#vehicle_status_chart");
-                if (vehicleChartElement) {
-                    var vehicleStatusOptions = {
+                // Department Spending Chart (Pie Chart)
+                var deptChartElement = document.querySelector("#department_spending_chart");
+                if (deptChartElement) {
+                    var departmentSpendingOptions = {
                         series: [
-                            @if (vehicleStatuses != null && vehicleStatuses.Any())
+                            @if (departmentSpending != null && departmentSpending.Any())
                             {
-                                @Html.Raw(string.Join(", ", vehicleStatuses.Select(v => v.Count)))
+                                @Html.Raw(string.Join(", ", departmentSpending.Select(d => d.TotalSpending)))
                             }
                             else
                             {
-                                <text>42, 35, 15, 8</text>
+                                <text>35000000, 28000000, 22000000, 15000000</text>
                             }
                         ],
                         chart: {
@@ -365,18 +421,25 @@
                             height: 300
                         },
                         labels: [
-                            @if (vehicleStatuses != null && vehicleStatuses.Any())
+                            @if (departmentSpending != null && departmentSpending.Any())
                             {
-                                @Html.Raw(string.Join(", ", vehicleStatuses.Select(v => $"'{v.Status}'")))
+                                @Html.Raw(string.Join(", ", departmentSpending.Select(d => $"'{d.DepartmentName}'")))
                             }
                             else
                             {
-                                <text>'Available', 'In Use', 'Maintenance', 'Out of Service'</text>
+                                <text>'IT', 'HR', 'Marketing', 'Operations'</text>
                             }
                         ],
-                        colors: ['#28a745', '#007bff', '#ffc107', '#dc3545'],
+                        colors: ['#6259ca', '#28a745', '#ffc107', '#17a2b8'],
                         legend: {
                             position: 'bottom'
+                        },
+                        tooltip: {
+                            y: {
+                                formatter: function(val) {
+                                    return 'Rp ' + val.toLocaleString('id-ID');
+                                }
+                            }
                         },
                         responsive: [{
                             breakpoint: 480,
@@ -392,28 +455,28 @@
                     };
                     
                     try {
-                        var vehicleStatusChart = new ApexCharts(vehicleChartElement, vehicleStatusOptions);
-                        vehicleStatusChart.render();
+                        var departmentSpendingChart = new ApexCharts(deptChartElement, departmentSpendingOptions);
+                        departmentSpendingChart.render();
                     } catch (err) {
-                        console.error("Error rendering Vehicle Status chart:", err);
-                        vehicleChartElement.innerHTML = "<div class='alert alert-danger'>Could not load chart</div>";
+                        console.error("Error rendering Department Spending chart:", err);
+                        deptChartElement.innerHTML = "<div class='alert alert-danger'>Could not load chart</div>";
                     }
                 }
                 
-                // Region Map Chart
-                var regionChartElement = document.querySelector("#region_map_chart");
-                if (regionChartElement) {
-                    var regionMapOptions = {
+                // Budget Utilization Chart
+                var budgetChartElement = document.querySelector("#budget_utilization_chart");
+                if (budgetChartElement) {
+                    var budgetUtilizationOptions = {
                         series: [{
-                            name: 'Vehicles',
+                            name: 'Used',
                             data: [
-                                @if (regionDistribution != null && regionDistribution.Any())
+                                @if (budgetUtilization != null && budgetUtilization.Any())
                                 {
-                                    @Html.Raw(string.Join(", ", regionDistribution.Select(r => r.Count)))
+                                    @Html.Raw(string.Join(", ", budgetUtilization.Select(b => b.Used)))
                                 }
                                 else
                                 {
-                                    <text>15, 12, 8, 7</text>
+                                    <text>75000000, 50000000, 30000000, 25000000</text>
                                 }
                             ]
                         }],
@@ -426,7 +489,7 @@
                         },
                         plotOptions: {
                             bar: {
-                                horizontal: false,
+                                horizontal: true,
                                 columnWidth: '55%',
                                 borderRadius: 4,
                             },
@@ -437,19 +500,31 @@
                         },
                         xaxis: {
                             categories: [
-                                @if (regionDistribution != null && regionDistribution.Any())
+                                @if (budgetUtilization != null && budgetUtilization.Any())
                                 {
-                                    @Html.Raw(string.Join(", ", regionDistribution.Select(r => $"'{r.Region}'")))
+                                    @Html.Raw(string.Join(", ", budgetUtilization.Select(b => $"'{b.DepartmentName}'")))
                                 }
                                 else
                                 {
-                                    <text>'Head Office', 'Mining Area A', 'Mining Area B', 'Remote Site'</text>
+                                    <text>'IT', 'HR', 'Marketing', 'Operations'</text>
                                 }
-                            ]
+                            ],
+                            labels: {
+                                formatter: function(val) {
+                                    return 'Rp ' + (val / 1000000).toFixed(0) + 'M';
+                                }
+                            }
                         },
                         yaxis: {
                             title: {
-                                text: 'Number of Vehicles'
+                                text: ''
+                            }
+                        },
+                        tooltip: {
+                            y: {
+                                formatter: function(val) {
+                                    return 'Rp ' + val.toLocaleString('id-ID');
+                                }
                             }
                         },
                         fill: {
@@ -458,32 +533,15 @@
                     };
                     
                     try {
-                        var regionMapChart = new ApexCharts(regionChartElement, regionMapOptions);
-                        regionMapChart.render();
+                        var budgetUtilizationChart = new ApexCharts(budgetChartElement, budgetUtilizationOptions);
+                        budgetUtilizationChart.render();
                     } catch (err) {
-                        console.error("Error rendering Region Map chart:", err);
-                        regionChartElement.innerHTML = "<div class='alert alert-danger'>Could not load chart</div>";
+                        console.error("Error rendering Budget Utilization chart:", err);
+                        budgetChartElement.innerHTML = "<div class='alert alert-danger'>Could not load chart</div>";
                     }
                 }
             } catch (err) {
                 console.error("Error in chart initialization:", err);
-            }
-            
-            // Event handler for reservation period filter
-            var periodFilter = document.getElementById("reservationPeriodFilter");
-            if (periodFilter) {
-                periodFilter.addEventListener("change", function() {
-                    // In a real application, this would call an API to get updated data
-                    // For now, we'll just show a loading message
-                    var recentReservationsTable = document.getElementById("recentReservationsTable");
-                    if (recentReservationsTable) {
-                        recentReservationsTable.innerHTML = "<tr><td colspan='6' class='text-center'>Loading...</td></tr>";
-                        
-                        setTimeout(function() {
-                            location.reload();
-                        }, 500);
-                    }
-                });
             }
         });
     </script>
@@ -491,38 +549,75 @@
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Prepare data for Fuel Consumption Trend
-        const monthlyFuelData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthlyFuelData));
+        // Prepare data for Monthly Request Trend
+        const monthlyTrendData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthlyTrend ?? new List<object>()));
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const fuelData = months.map((m, i) => {
-            const found = monthlyFuelData.find(x => x.Month === i + 1);
-            return found ? found.Consumption : 0;
+        const requestCounts = months.map((m, i) => {
+            const found = monthlyTrendData.find(x => x.Month === i + 1);
+            return found ? found.Count : 0;
+        });
+        const requestAmounts = months.map((m, i) => {
+            const found = monthlyTrendData.find(x => x.Month === i + 1);
+            return found ? found.TotalAmount / 1000000 : 0; // In millions
         });
 
-        const ctx = document.getElementById('fuel_consumption_chart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: months,
-                datasets: [{
-                    label: 'Fuel Consumption (L)',
-                    data: fuelData,
-                    borderColor: '#e74c3c',
-                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    title: { display: false }
+        const ctx = document.getElementById('monthly_trend_chart');
+        if (ctx) {
+            new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Request Count',
+                        data: requestCounts,
+                        borderColor: '#6259ca',
+                        backgroundColor: 'rgba(98, 89, 202, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Amount (Millions)',
+                        data: requestAmounts,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }]
                 },
-                scales: {
-                    y: { beginAtZero: true }
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        title: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Count'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Amount (M)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
                 }
-            }
-        });
+            });
+        }
     </script>
 }

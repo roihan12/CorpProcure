@@ -104,6 +104,12 @@ public static class IdentityConfiguration
         // Add Authentication service
         services.AddScoped<IAuthenticationUserService, AuthenticationUserService>();
 
+        services.AddScoped<IPurchaseRequestService, PurchaseRequestService>();
+
+        services.AddScoped<INumberGeneratorService, NumberGeneratorService>();
+
+        services.AddScoped<IBudgetService, BudgetService>();
+
         return services;
     }
 

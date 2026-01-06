@@ -1,155 +1,207 @@
 <div class="sidebar-area" id="sidebar-area">
     <div class="logo position-relative">
-        <a href="/dashboard" class="d-block text-decoration-none position-relative">
+        <a href="/" class="d-block text-decoration-none position-relative">
             <img src="~/images/logo-icon.png" alt="logo-icon" />
-            <span class="logo-text fw-bold text-dark">MTT</span>
+            <span class="logo-text fw-bold text-dark">CorpProcure</span>
         </a>
-        <button
-            class="sidebar-burger-menu bg-transparent p-0 border-0 opacity-0 z-n1 position-absolute top-50 end-0 translate-middle-y"
-            id="sidebar-burger-menu">
+        <button class="sidebar-burger-menu bg-transparent p-0 border-0 opacity-0 z-n1 position-absolute top-50 end-0 translate-middle-y"
+                id="sidebar-burger-menu">
             <i data-feather="x"></i>
         </button>
     </div>
 
     <aside id="layout-menu" class="layout-menu menu-vertical menu active" data-simplebar>
         <ul class="menu-inner">
+            <!-- MAIN MENU -->
             <li class="menu-title small text-uppercase">
                 <span class="menu-title-text">MAIN</span>
             </li>
-            
-            <li class="menu-item open">
-                <a asp-area="" asp-controller="Home" asp-action="Index" class="menu-link @(Context.Request.Path == "/" ? "active" : "")">
-                    <span class="material-symbols-outlined menu-icon">
-                        dashboard_customize
-                    </span>
+
+            <!-- Dashboard -->
+            <li class="menu-item @(Context.Request.Path == "/" || Context.Request.Path == "/Home" ? "open" : "")">
+                <a asp-controller="Home" asp-action="Index" class="menu-link @(Context.Request.Path == "/" || Context.Request.Path == "/Home" ? "active" : "")">
+                    <span class="material-symbols-outlined menu-icon">dashboard</span>
                     <span class="title">Dashboard</span>
                 </a>
             </li>
-            
-            <li class="menu-item">
-                <a href="javascript:void(0);" class="menu-link menu-toggle active">
-                    <span class="material-symbols-outlined menu-icon">
-                        directions_car
-                    </span>
-                    <span class="title">
-                        Reservations
-                    </span>
+
+            <!-- Purchase Requests -->
+            <li class="menu-item @(Context.Request.Path.StartsWithSegments("/PurchasesRequest") ? "open" : "")">
+                <a href="javascript:void(0);" class="menu-link menu-toggle @(Context.Request.Path.StartsWithSegments("/PurchasesRequest") ? "active" : "")">
+                    <span class="material-symbols-outlined menu-icon">shopping_cart</span>
+                    <span class="title">Purchase Requests</span>
                 </a>
-                <ul class="menu-sub @(Context.Request.Path.StartsWithSegments("/VehicleReservation") ? "open" : "")">
+                <ul class="menu-sub @(Context.Request.Path.StartsWithSegments("/PurchasesRequest") ? "open" : "")">
                     <li class="menu-item">
-                        <a asp-area="" asp-controller="VehicleReservation" asp-action="Index"
-                           class="menu-link @(Context.Request.Path == "/VehicleReservation" ? "active" : "")">
-                            Reservation List
+                        <a asp-controller="PurchasesRequest" asp-action="Index"
+                           class="menu-link @(Context.Request.Path == "/PurchasesRequest" || Context.Request.Path == "/PurchasesRequest/Index" ? "active" : "")">
+                            My Requests
                         </a>
                     </li>
-                    @if (User.IsInRole("Admin"))
+                    @if (User.IsInRole("Staff") || User.IsInRole("Manager"))
                     {
                         <li class="menu-item">
-                            <a asp-controller="VehicleReservation" asp-action="Create"
-                               class="menu-link @(Context.Request.Path == "/VehicleReservation/Create" ? "active" : "")">
-                                Create Reservation
+                            <a asp-controller="PurchasesRequest" asp-action="Create"
+                               class="menu-link @(Context.Request.Path == "/PurchasesRequest/Create" ? "active" : "")">
+                                Create Request
+                            </a>
+                        </li>
+                    }
+                    @if (User.IsInRole("Manager") || User.IsInRole("Finance") || User.IsInRole("Admin"))
+                    {
+                        <li class="menu-item">
+                            <a asp-controller="PurchasesRequest" asp-action="DepartmentRequests"
+                               class="menu-link @(Context.Request.Path == "/PurchasesRequest/DepartmentRequests" ? "active" : "")">
+                                Department Requests
                             </a>
                         </li>
                     }
                 </ul>
             </li>
-            
-            @if (User.IsInRole("Approver"))
+
+            <!-- Approvals (Manager & Finance only) -->
+            @if (User.IsInRole("Manager") || User.IsInRole("Finance"))
             {
-                <li class="menu-item open">
-                    <a asp-area="" asp-controller="VehicleReservation" asp-action="MyApprovals" class="menu-link @(Context.Request.Path == "/VehicleReservation/MyApprovals" ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">
-                            task_alt
+                <li class="menu-item @(Context.Request.Path == "/PurchasesRequest/PendingApprovals" ? "open" : "")">
+                    <a asp-controller="PurchasesRequest" asp-action="PendingApprovals"
+                       class="menu-link @(Context.Request.Path == "/PurchasesRequest/PendingApprovals" ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">task_alt</span>
+                        <span class="title">
+                            Pending Approvals
+                            @* Optional: Add badge for pending count *@
                         </span>
-                        <span class="title">Approvals</span>
                     </a>
                 </li>
             }
-            
+
+            <!-- Purchase Orders (Procurement only) -->
+            @if (User.IsInRole("Procurement") || User.IsInRole("Admin"))
+            {
+                <li class="menu-item @(Context.Request.Path.StartsWithSegments("/PurchasesOrder") ? "open" : "")">
+                    <a asp-controller="PurchaseOrder" asp-action="Index"
+                       class="menu-link @(Context.Request.Path.StartsWithSegments("/PurchasesOrder") ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">receipt_long</span>
+                        <span class="title">Purchase Orders</span>
+                    </a>
+                </li>
+            }
+
+            <!-- BUDGET SECTION -->
+            @if (User.IsInRole("Manager") || User.IsInRole("Finance") || User.IsInRole("Admin"))
+            {
+                <li class="menu-title small text-uppercase">
+                    <span class="menu-title-text">BUDGET</span>
+                </li>
+
+                <li class="menu-item @(Context.Request.Path.StartsWithSegments("/Budget") ? "open" : "")">
+                    <a asp-controller="Budget" asp-action="Index"
+                       class="menu-link @(Context.Request.Path.StartsWithSegments("/Budget") ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">account_balance_wallet</span>
+                        <span class="title">Budget Overview</span>
+                    </a>
+                </li>
+            }
+
+            <!-- REPORTS (Finance & Admin) -->
+            @if (User.IsInRole("Finance") || User.IsInRole("Admin"))
+            {
+                <li class="menu-title small text-uppercase">
+                    <span class="menu-title-text">REPORTS</span>
+                </li>
+
+                <li class="menu-item">
+                    <a asp-controller="Report" asp-action="PurchaseRequestReport"
+                       class="menu-link @(Context.Request.Path == "/Report/PurchaseRequestReport" ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">assessment</span>
+                        <span class="title">PR Report</span>
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a asp-controller="Report" asp-action="BudgetReport"
+                       class="menu-link @(Context.Request.Path == "/Report/BudgetReport" ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">bar_chart</span>
+                        <span class="title">Budget Report</span>
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a asp-controller="Report" asp-action="ApprovalReport"
+                       class="menu-link @(Context.Request.Path == "/Report/ApprovalReport" ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">timeline</span>
+                        <span class="title">Approval Timeline</span>
+                    </a>
+                </li>
+            }
+
+            <!-- MASTER DATA (Admin only) -->
             @if (User.IsInRole("Admin"))
             {
                 <li class="menu-title small text-uppercase">
-                    <span class="menu-title-text">REPORT</span>
-                </li>
-                
-                <li class="menu-item">
-                    <a asp-area="" asp-controller="VehicleReservation" asp-action="Report" class="menu-link @(Context.Request.Path == "/VehicleReservation/Report" ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">assessment</span>
-                        <span class="title">Reservation Report</span>
-                    </a>
-                </li>
-                
-                <li class="menu-item">
-                    <a asp-area="" asp-controller="ActivityLog" asp-action="Index" class="menu-link @(Context.Request.Path.StartsWithSegments("/ActivityLog") ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">history</span>
-                        <span class="title">Activity Logs</span>
-                    </a>
-                </li>
-                
-                <li class="menu-title small text-uppercase">
                     <span class="menu-title-text">MASTER DATA</span>
                 </li>
-                
+
                 <li class="menu-item">
-                    <a asp-area="" asp-controller="Vehicle" asp-action="Index" class="menu-link @(Context.Request.Path.StartsWithSegments("/Vehicle") ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">directions_car</span>
-                        <span class="title">Vehicles</span>
+                    <a asp-controller="Department" asp-action="Index"
+                       class="menu-link @(Context.Request.Path.StartsWithSegments("/Department") ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">corporate_fare</span>
+                        <span class="title">Departments</span>
                     </a>
                 </li>
-                
+
                 <li class="menu-item">
-                    <a asp-area="" asp-controller="Driver" asp-action="Index" class="menu-link @(Context.Request.Path.StartsWithSegments("/Driver") ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">person</span>
-                        <span class="title">Drivers</span>
+                    <a asp-controller="User" asp-action="Index"
+                       class="menu-link @(Context.Request.Path.StartsWithSegments("/User") ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">group</span>
+                        <span class="title">Users</span>
                     </a>
                 </li>
-                
+
                 <li class="menu-item">
-                    <a asp-area="" asp-controller="Maintenance" asp-action="Index" class="menu-link @(Context.Request.Path.StartsWithSegments("/Maintenance") ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">build</span>
-                        <span class="title">Vehicle Maintenance</span>
+                    <a asp-controller="Budget" asp-action="Manage"
+                       class="menu-link @(Context.Request.Path == "/Budget/Manage" ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">monetization_on</span>
+                        <span class="title">Budget Management</span>
                     </a>
                 </li>
-                
+
                 <li class="menu-item">
-                    <a asp-area="" asp-controller="Region" asp-action="Index" class="menu-link @(Context.Request.Path.StartsWithSegments("/Region") ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">map</span>
-                        <span class="title">Regions</span>
-                    </a>
-                </li>
-                
-                <li class="menu-item">
-                    <a asp-area="" asp-controller="Location" asp-action="Index" class="menu-link @(Context.Request.Path.StartsWithSegments("/Location") ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">location_on</span>
-                        <span class="title">Locations</span>
-                    </a>
-                </li>
-                
-                <li class="menu-item">
-                    <a asp-area="" asp-controller="FuelConsumption" asp-action="Index" class="menu-link @(Context.Request.Path.StartsWithSegments("/FuelConsumption") ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">local_gas_station</span>
-                        <span class="title">Fuel Consumption</span>
+                    <a asp-controller="AuditLog" asp-action="Index"
+                       class="menu-link @(Context.Request.Path.StartsWithSegments("/AuditLog") ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">history</span>
+                        <span class="title">Audit Logs</span>
                     </a>
                 </li>
             }
 
-
+            <!-- PROFILE & SETTINGS -->
             <li class="menu-title small text-uppercase">
-                <span class="menu-title-text">OTHERS</span>
+                <span class="menu-title-text">ACCOUNT</span>
             </li>
 
             <li class="menu-item">
-                <a asp-controller="Account" asp-action="Profile" class="menu-link">
+                <a asp-controller="Account" asp-action="Profile"
+                   class="menu-link @(Context.Request.Path == "/Account/Profile" ? "active" : "")">
                     <span class="material-symbols-outlined menu-icon">account_circle</span>
                     <span class="title">My Profile</span>
                 </a>
             </li>
 
             <li class="menu-item">
-                <a asp-controller="Account" asp-action="Logout" class="menu-link">
-                    <span class="material-symbols-outlined menu-icon">logout</span>
-                    <span class="title">Logout</span>
+                <a asp-controller="Account" asp-action="ChangePassword"
+                   class="menu-link @(Context.Request.Path == "/Account/ChangePassword" ? "active" : "")">
+                    <span class="material-symbols-outlined menu-icon">lock</span>
+                    <span class="title">Change Password</span>
                 </a>
+            </li>
+
+            <li class="menu-item">
+                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                    <button type="submit" class="menu-link border-0 bg-transparent w-100 text-start">
+                        <span class="material-symbols-outlined menu-icon">logout</span>
+                        <span class="title">Logout</span>
+                    </button>
+                </form>
             </li>
         </ul>
     </aside>

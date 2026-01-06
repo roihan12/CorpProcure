@@ -1,0 +1,347 @@
+@using CorpProcure.DTOs.PurchaseRequest
+@model CreatePurchaseRequestDto
+@{
+    ViewData["Title"] = "Create Purchase Request";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Create Purchase Request</h3>
+
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="PurchasesRequest" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <span class="text-secondary fw-medium hover">Purchase Requests</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Create</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <form asp-action="Create" method="post" id="createForm">
+        <div class="row">
+            <div class="col-xxl-8 col-lg-7">
+                <div class="card bg-white border-0 rounded-3 mb-4">
+                    <div class="card-body p-4">
+                        <h3 class="mb-lg-4 mb-3">Request Information</h3>
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="form-group mb-4">
+                                    <label asp-for="Description" class="label text-secondary">Description <span class="text-danger">*</span></label>
+                                    <input asp-for="Description" class="form-control h-55" placeholder="Brief description of the purchase request" required />
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="form-group mb-4">
+                                    <label asp-for="Justification" class="label text-secondary">Justification <span class="text-danger">*</span></label>
+                                    <textarea asp-for="Justification" class="form-control" rows="4" placeholder="Why is this purchase needed? Explain the business justification..." required></textarea>
+                                    <span asp-validation-for="Justification" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Items Section -->
+                <div class="card bg-white border-0 rounded-3 mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="mb-0">Request Items</h3>
+                            <button type="button" id="addItemBtn" class="btn btn-outline-primary btn-sm">
+                                <i class="ri-add-line me-1"></i> Add Item
+                            </button>
+                        </div>
+                        
+                        <div id="itemsContainer">
+                            <!-- Item Template -->
+                            <div class="item-row border rounded-3 p-3 mb-3" data-index="0">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">Item #1</h6>
+                                    <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" style="display: none;">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="label text-secondary">Item Name <span class="text-danger">*</span></label>
+                                            <input type="text" name="Items[0].ItemName" class="form-control" placeholder="e.g., Laptop Dell XPS 15" required />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="label text-secondary">Description</label>
+                                            <input type="text" name="Items[0].Description" class="form-control" placeholder="Specifications or details" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-3">
+                                            <label class="label text-secondary">Quantity <span class="text-danger">*</span></label>
+                                            <input type="number" name="Items[0].Quantity" class="form-control item-quantity" min="1" value="1" required />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-3">
+                                            <label class="label text-secondary">Unit</label>
+                                            <select name="Items[0].Unit" class="form-select">
+                                                <option value="pcs">Pcs</option>
+                                                <option value="unit">Unit</option>
+                                                <option value="box">Box</option>
+                                                <option value="set">Set</option>
+                                                <option value="pack">Pack</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-3">
+                                            <label class="label text-secondary">Unit Price (Rp) <span class="text-danger">*</span></label>
+                                            <input type="number" name="Items[0].UnitPrice" class="form-control item-price" min="0" step="1000" placeholder="0" required />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-3">
+                                            <label class="label text-secondary">Subtotal</label>
+                                            <input type="text" class="form-control item-subtotal" readonly value="Rp 0" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-top pt-3 mt-3">
+                            <div class="d-flex justify-content-end">
+                                <div class="text-end">
+                                    <span class="text-muted">Total Amount:</span>
+                                    <h4 class="mb-0 text-primary" id="grandTotal">Rp 0</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xxl-4 col-lg-5">
+                <div class="card bg-white border-0 rounded-3 mb-4">
+                    <div class="card-body p-4">
+                        <h3 class="mb-3 mb-lg-4">Summary</h3>
+                        
+                        <div class="alert alert-info bg-info bg-opacity-10 border-0 p-3 mb-4">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="ri-information-line fs-18 text-info"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <p class="mb-0 small">After submission, your request will go through 2-level approval:</p>
+                                    <ol class="mb-0 ps-3 small mt-2">
+                                        <li>Manager Approval (Operational)</li>
+                                        <li>Finance Approval (Budget)</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Items:</span>
+                                <span id="itemCount">1 item(s)</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Total:</span>
+                                <span class="fw-bold text-primary" id="summaryTotal">Rp 0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex flex-wrap gap-3">
+                    <a asp-action="Index" class="btn btn-outline-secondary py-2 px-4 fw-medium fs-16">
+                        <i class="ri-arrow-left-line me-1"></i> Cancel
+                    </a>
+                    <button type="submit" name="action" value="draft" class="btn btn-light py-2 px-4 fw-medium fs-16">
+                        <i class="ri-save-line me-1"></i> Save as Draft
+                    </button>
+                    <button type="submit" name="action" value="submit" class="btn btn-primary py-2 px-4 fw-medium fs-16">
+                        <i class="ri-send-plane-line me-1"></i> Submit Request
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            let itemIndex = 0;
+            
+            function formatCurrency(amount) {
+                return 'Rp ' + amount.toLocaleString('id-ID');
+            }
+            
+            function calculateSubtotal(row) {
+                const qty = parseFloat($(row).find('.item-quantity').val()) || 0;
+                const price = parseFloat($(row).find('.item-price').val()) || 0;
+                const subtotal = qty * price;
+                $(row).find('.item-subtotal').val(formatCurrency(subtotal));
+                return subtotal;
+            }
+            
+            function calculateGrandTotal() {
+                let total = 0;
+                $('.item-row').each(function() {
+                    total += calculateSubtotal(this);
+                });
+                $('#grandTotal').text(formatCurrency(total));
+                $('#summaryTotal').text(formatCurrency(total));
+                
+                const itemCount = $('.item-row').length;
+                $('#itemCount').text(itemCount + ' item(s)');
+                
+                // Show/hide remove buttons
+                if (itemCount > 1) {
+                    $('.remove-item-btn').show();
+                } else {
+                    $('.remove-item-btn').hide();
+                }
+            }
+            
+            function updateItemIndices() {
+                $('.item-row').each(function(index) {
+                    $(this).attr('data-index', index);
+                    $(this).find('h6').text('Item #' + (index + 1));
+                    $(this).find('input, select').each(function() {
+                        const name = $(this).attr('name');
+                        if (name) {
+                            $(this).attr('name', name.replace(/\[\d+\]/, '[' + index + ']'));
+                        }
+                    });
+                });
+                itemIndex = $('.item-row').length - 1;
+            }
+            
+            // Add new item
+            $('#addItemBtn').click(function() {
+                itemIndex++;
+                const newItem = `
+                    <div class="item-row border rounded-3 p-3 mb-3" data-index="${itemIndex}">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">Item #${itemIndex + 1}</h6>
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Item Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="Items[${itemIndex}].ItemName" class="form-control" placeholder="e.g., Laptop Dell XPS 15" required />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Description</label>
+                                    <input type="text" name="Items[${itemIndex}].Description" class="form-control" placeholder="Specifications or details" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Quantity <span class="text-danger">*</span></label>
+                                    <input type="number" name="Items[${itemIndex}].Quantity" class="form-control item-quantity" min="1" value="1" required />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Unit</label>
+                                    <select name="Items[${itemIndex}].Unit" class="form-select">
+                                        <option value="pcs">Pcs</option>
+                                        <option value="unit">Unit</option>
+                                        <option value="box">Box</option>
+                                        <option value="set">Set</option>
+                                        <option value="pack">Pack</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Unit Price (Rp) <span class="text-danger">*</span></label>
+                                    <input type="number" name="Items[${itemIndex}].UnitPrice" class="form-control item-price" min="0" step="1000" placeholder="0" required />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Subtotal</label>
+                                    <input type="text" class="form-control item-subtotal" readonly value="Rp 0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#itemsContainer').append(newItem);
+                calculateGrandTotal();
+            });
+            
+            // Remove item
+            $(document).on('click', '.remove-item-btn', function() {
+                $(this).closest('.item-row').remove();
+                updateItemIndices();
+                calculateGrandTotal();
+            });
+            
+            // Calculate on input change
+            $(document).on('input', '.item-quantity, .item-price', function() {
+                calculateGrandTotal();
+            });
+            
+            // Initial calculation
+            calculateGrandTotal();
+            
+            // Form validation
+            $('#createForm').submit(function(e) {
+                const itemCount = $('.item-row').length;
+                if (itemCount === 0) {
+                    e.preventDefault();
+                    alert('Please add at least one item to your request.');
+                    return false;
+                }
+                
+                let hasValidItem = false;
+                $('.item-row').each(function() {
+                    const name = $(this).find('input[name$=".ItemName"]').val();
+                    const qty = $(this).find('.item-quantity').val();
+                    const price = $(this).find('.item-price').val();
+                    
+                    if (name && qty > 0 && price > 0) {
+                        hasValidItem = true;
+                    }
+                });
+                
+                if (!hasValidItem) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields for at least one item.');
+                    return false;
+                }
+                
+                return true;
+            });
+        });
+    </script>
+}

@@ -1,0 +1,256 @@
+@using CorpProcure.Models.Enums
+@using CorpProcure.DTOs.PurchaseRequest
+@{
+    ViewData["Title"] = "Approve Request";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var request = ViewData["Request"] as PurchaseRequestDto;
+    var approvalLevel = (int)(ViewData["ApprovalLevel"] ?? 1);
+    var approvalType = approvalLevel == 1 ? "Manager" : "Finance";
+}
+
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Approve Purchase Request</h3>
+
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="PurchasesRequest" asp-action="MyApprovals" class="d-flex align-items-center text-decoration-none">
+                        <span class="text-secondary fw-medium hover">My Approvals</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Approve</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row">
+        <div class="col-xxl-8 col-lg-7">
+            <!-- Request Summary -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fs-18 fw-medium mb-0">@request?.RequestNumber</h4>
+                        <span class="badge bg-info bg-opacity-10 text-info p-2 fs-12 fw-normal">
+                            @approvalType Approval (Level @approvalLevel)
+                        </span>
+                    </div>
+                    
+                    <div class="default-table-area mb-4">
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row" style="width: 30%;">Description</th>
+                                        <td>@request?.Description</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Justification</th>
+                                        <td>@request?.Justification</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Requester</th>
+                                        <td>@request?.RequesterName</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Department</th>
+                                        <td>@request?.DepartmentName</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Request Date</th>
+                                        <td>@request?.RequestDate.ToString("dd MMM yyyy")</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Total Amount</th>
+                                        <td class="fw-bold text-primary fs-18">Rp @request?.TotalAmount.ToString("N0")</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Items -->
+                    <h5 class="mb-3">Items (@(request?.Items.Count ?? 0))</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Item Name</th>
+                                    <th>Description</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (request?.Items != null)
+                                {
+                                    var no = 1;
+                                    foreach (var item in request.Items)
+                                    {
+                                        <tr>
+                                            <td>@no</td>
+                                            <td class="fw-medium">@item.ItemName</td>
+                                            <td class="text-muted">@(item.Description ?? "-")</td>
+                                            <td class="text-center">@item.Quantity</td>
+                                            <td class="text-end">Rp @item.UnitPrice.ToString("N0")</td>
+                                            <td class="text-end fw-medium">Rp @item.TotalPrice.ToString("N0")</td>
+                                        </tr>
+                                        no++;
+                                    }
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light">
+                                    <td colspan="5" class="text-end fw-bold">Total:</td>
+                                    <td class="text-end fw-bold text-primary">Rp @request?.TotalAmount.ToString("N0")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xxl-4 col-lg-5">
+            <!-- Approval Form -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-0">
+                    <div class="p-4 border-bottom">
+                        <h5 class="card-title mb-0">Approval Decision</h5>
+                    </div>
+                    
+                    <div class="p-4">
+                        <form asp-action="ProcessApproval" method="post">
+                            <input type="hidden" name="requestId" value="@request?.Id" />
+                            <input type="hidden" name="approvalLevel" value="@approvalLevel" />
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-medium">Decision <span class="text-danger">*</span></label>
+                                <div class="d-flex gap-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="action" id="actionApprove" value="approve" checked>
+                                        <label class="form-check-label d-flex align-items-center gap-1" for="actionApprove">
+                                            <i class="material-symbols-outlined fs-18 text-success">check_circle</i> 
+                                            <span>Approve</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="action" id="actionReject" value="reject">
+                                        <label class="form-check-label d-flex align-items-center gap-1" for="actionReject">
+                                            <i class="material-symbols-outlined fs-18 text-danger">cancel</i> 
+                                            <span>Reject</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="notes" class="form-label fw-medium">Notes / Comments</label>
+                                <textarea name="notes" id="notes" rows="4" class="form-control" placeholder="Add your comments here (required for rejection)"></textarea>
+                            </div>
+                            
+                            <div class="alert alert-warning bg-warning bg-opacity-10 border-0 p-3" id="warningApprove">
+                                <div class="d-flex align-items-center">
+                                    <i class="material-symbols-outlined fs-20 me-2">info</i>
+                                    <span>
+                                        @if (approvalLevel == 1)
+                                        {
+                                            <text>After approval, this request will proceed to Finance for final approval.</text>
+                                        }
+                                        else
+                                        {
+                                            <text>After approval, this request will be fully approved and ready for PO generation.</text>
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-danger bg-danger bg-opacity-10 border-0 p-3 d-none" id="warningReject">
+                                <div class="d-flex align-items-center">
+                                    <i class="material-symbols-outlined fs-20 me-2">warning</i>
+                                    <span>Rejection will end the approval workflow. Please provide a clear reason.</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4">
+                                <a asp-action="Details" asp-route-id="@request?.Id" class="btn btn-outline-primary py-1 px-4 fs-14 fw-medium rounded-3">
+                                    <span class="py-1 d-block">
+                                        <i class="material-symbols-outlined fs-18 align-middle me-1">visibility</i>
+                                        <span>View Full Details</span>
+                                    </span>
+                                </a>
+                                
+                                <div>
+                                    <a asp-action="MyApprovals" class="btn btn-light py-1 px-4 fs-14 fw-medium rounded-3 me-2">
+                                        <span class="py-1 d-block">
+                                            <i class="material-symbols-outlined fs-18 align-middle me-1">arrow_back</i>
+                                            <span>Back</span>
+                                        </span>
+                                    </a>
+                                    <button type="submit" class="btn btn-primary py-1 px-4 fs-14 fw-medium rounded-3" id="submitBtn">
+                                        <span class="py-1 d-block">
+                                            <i class="material-symbols-outlined fs-18 align-middle me-1">send</i>
+                                            <span>Submit Decision</span>
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('input[name="action"]').change(function() {
+                if ($(this).val() === 'reject') {
+                    $('#warningApprove').addClass('d-none');
+                    $('#warningReject').removeClass('d-none');
+                    $('#notes').attr('required', true);
+                    $('#submitBtn').removeClass('btn-primary').addClass('btn-danger');
+                } else {
+                    $('#warningApprove').removeClass('d-none');
+                    $('#warningReject').addClass('d-none');
+                    $('#notes').attr('required', false);
+                    $('#submitBtn').removeClass('btn-danger').addClass('btn-primary');
+                }
+            });
+            
+            $('form').submit(function(e) {
+                const action = $('input[name="action"]:checked').val();
+                const notes = $('#notes').val().trim();
+                
+                if (action === 'reject' && !notes) {
+                    e.preventDefault();
+                    alert('Please provide a reason for rejection.');
+                    return false;
+                }
+                
+                const confirmMsg = action === 'approve' 
+                    ? 'Are you sure you want to approve this request?' 
+                    : 'Are you sure you want to reject this request?';
+                    
+                if (!confirm(confirmMsg)) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                return true;
+            });
+        });
+    </script>
+}
