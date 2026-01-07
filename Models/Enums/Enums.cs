@@ -136,5 +136,20 @@ public enum AuditLogType
     /// <summary>
     /// Budget dirilis kembali
     /// </summary>
-    BudgetRelease = 9
+    BudgetRelease = 9,
+
+    /// <summary>
+    /// User login berhasil
+    /// </summary>
+    Login = 10,
+
+    /// <summary>
+    /// User login gagal
+    /// </summary>
+    LoginFailed = 11,
+
+    /// <summary>
+    /// User logout
+    /// </summary>
+    Logout = 12
 }

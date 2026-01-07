@@ -13,10 +13,12 @@ namespace CorpProcure.Controllers;
 public class AccountController : Controller
 {
     private readonly IAuthenticationUserService _authService;
+    private readonly IAuditLogService _auditLogService;
 
-    public AccountController(IAuthenticationUserService authService)
+    public AccountController(IAuthenticationUserService authService, IAuditLogService auditLogService)
     {
         _authService = authService;
+        _auditLogService = auditLogService;
     }
 
     // GET: /Account/Login
@@ -45,6 +47,18 @@ public class AccountController : Controller
 
         if (result.Success)
         {
+            // Log successful login
+            if (result.User != null)
+            {
+                await _auditLogService.LogLoginAsync(
+                    result.User.Id,
+                    result.User.Name,
+                    true,
+                    HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    Request.Headers["User-Agent"].ToString()
+                );
+            }
+            
             // Login successful
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
@@ -106,6 +120,20 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
+        // Capture user info before logout
+        var userId = User.GetUserId();
+        var user = await _authService.GetUserByIdAsync(userId);
+        
+        if (user != null)
+        {
+            await _auditLogService.LogLogoutAsync(
+                userId,
+                user.Name,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Request.Headers["User-Agent"].ToString()
+            );
+        }
+        
         await _authService.LogoutAsync();
         return RedirectToAction("Login", "Account");
     }

@@ -237,38 +237,32 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     /// </summary>
     public override int SaveChanges()
     {
-        // Track changes before saving
-        var entriesToAudit = ChangeTracker.Entries<BaseEntity>()
-            .Where(e => e.State == EntityState.Added ||
-                       e.State == EntityState.Modified ||
-                       e.State == EntityState.Deleted)
-            .Select(e => new
-            {
-                Entry = e,
-                State = e.State
-            })
-            .ToList();
-
-        // Save changes first
-        var result = base.SaveChanges();
-
-        // Generate audit logs after save (if there were changes)
-        if (entriesToAudit.Any() && _currentUserService != null)
+        // Capture audit entries BEFORE saving (entities still have their original states)
+        List<AuditLog>? auditLogs = null;
+        
+        if (_currentUserService != null)
         {
             var currentUserId = _currentUserService.UserId;
             var currentUserName = _currentUserService.UserName ?? "System";
+            
+            // Generate audit logs BEFORE save (while entities still have their states)
+            auditLogs = AuditInterceptor.GenerateAuditLogs(this, currentUserId, currentUserName);
+        }
+        
+        // Save changes
+        var result = base.SaveChanges();
 
-            // Accept all changes to get correct states
-            ChangeTracker.AcceptAllChanges();
-
-            // Generate audit logs (note: this must be done after AcceptAllChanges)
-            var auditLogs = AuditInterceptor.GenerateAuditLogs(this, currentUserId, currentUserName);
-
-            if (auditLogs.Any())
+        // Save audit logs after main save
+        if (auditLogs != null && auditLogs.Any())
+        {
+            // Detach audit entries from change tracker to avoid re-auditing them
+            foreach (var auditLog in auditLogs)
             {
-                AuditLogs.AddRange(auditLogs);
-                base.SaveChanges(); // Save audit logs
+                Entry(auditLog).State = EntityState.Detached;
             }
+            
+            AuditLogs.AddRange(auditLogs);
+            base.SaveChanges(); // Save audit logs
         }
 
         return result;
@@ -279,38 +273,32 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     /// </summary>
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // Track changes before saving
-        var entriesToAudit = ChangeTracker.Entries<BaseEntity>()
-            .Where(e => e.State == EntityState.Added ||
-                       e.State == EntityState.Modified ||
-                       e.State == EntityState.Deleted)
-            .Select(e => new
-            {
-                Entry = e,
-                State = e.State
-            })
-            .ToList();
-
-        // Save changes first
-        var result = await base.SaveChangesAsync(cancellationToken);
-
-        // Generate audit logs after save (if there were changes)
-        if (entriesToAudit.Any() && _currentUserService != null)
+        // Capture audit entries BEFORE saving (entities still have their original states)
+        List<AuditLog>? auditLogs = null;
+        
+        if (_currentUserService != null)
         {
             var currentUserId = _currentUserService.UserId;
             var currentUserName = _currentUserService.UserName ?? "System";
+            
+            // Generate audit logs BEFORE save (while entities still have their states)
+            auditLogs = AuditInterceptor.GenerateAuditLogs(this, currentUserId, currentUserName);
+        }
+        
+        // Save changes
+        var result = await base.SaveChangesAsync(cancellationToken);
 
-            // Accept all changes to get correct states
-            ChangeTracker.AcceptAllChanges();
-
-            // Generate audit logs (note: this must be done after AcceptAllChanges)
-            var auditLogs = AuditInterceptor.GenerateAuditLogs(this, currentUserId, currentUserName);
-
-            if (auditLogs.Any())
+        // Save audit logs after main save
+        if (auditLogs != null && auditLogs.Any())
+        {
+            // Detach audit entries from change tracker to avoid re-auditing them
+            foreach (var auditLog in auditLogs)
             {
-                await AuditLogs.AddRangeAsync(auditLogs, cancellationToken);
-                await base.SaveChangesAsync(cancellationToken); // Save audit logs
+                Entry(auditLog).State = EntityState.Detached;
             }
+            
+            await AuditLogs.AddRangeAsync(auditLogs, cancellationToken);
+            await base.SaveChangesAsync(cancellationToken); // Save audit logs
         }
 
         return result;

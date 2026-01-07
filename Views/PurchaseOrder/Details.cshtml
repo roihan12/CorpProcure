@@ -1,0 +1,230 @@
+@using CorpProcure.Models
+@using CorpProcure.Models.Enums
+@model PurchaseRequest
+@{
+    ViewData["Title"] = $"PO {Model.PoNumber ?? "Details"}";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Purchase Order Details</h3>
+
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="PurchaseOrder" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <span class="text-secondary fw-medium hover">Purchase Orders</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">@(Model.PoNumber ?? "Details")</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger bg-danger bg-opacity-10 border-0 alert-dismissible fade show mb-4" role="alert">
+            <i class="ri-error-warning-line me-2"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success bg-success bg-opacity-10 border-0 alert-dismissible fade show mb-4" role="alert">
+            <i class="ri-checkbox-circle-line me-2"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- PO Info Card -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h4 class="fs-24 fw-bold text-success mb-1">@Model.PoNumber</h4>
+                            <p class="text-muted mb-0">Purchase Order</p>
+                        </div>
+                        <span class="badge bg-success p-3 fs-14 fw-normal">
+                            <i class="ri-checkbox-circle-line me-1"></i> Generated
+                        </span>
+                    </div>
+
+                    <div class="default-table-area mb-4">
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row" style="width: 30%;">Request Number</th>
+                                        <td>@Model.RequestNumber</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">PO Date</th>
+                                        <td class="fw-medium">@Model.PoDate?.ToString("dd MMMM yyyy")</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Requester</th>
+                                        <td>@Model.Requester?.FullName</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Department</th>
+                                        <td>@Model.Department?.Name</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Description</th>
+                                        <td>@Model.Description</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Items -->
+                    <h5 class="fs-16 fw-medium mb-3">Order Items</h5>
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Item Name</th>
+                                    <th scope="col">Description</th>
+                                    <th scope="col" class="text-center">Qty</th>
+                                    <th scope="col" class="text-end">Unit Price</th>
+                                    <th scope="col" class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{ var itemNo = 1; }
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td>@itemNo</td>
+                                        <td class="fw-medium">@item.ItemName</td>
+                                        <td class="text-muted">@(item.Description ?? "-")</td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end">Rp @item.UnitPrice.ToString("N0")</td>
+                                        <td class="text-end fw-medium">Rp @((item.Quantity * item.UnitPrice).ToString("N0"))</td>
+                                    </tr>
+                                    itemNo++;
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-primary">
+                                    <td colspan="5" class="text-end fw-bold">TOTAL:</td>
+                                    <td class="text-end fw-bold fs-18">Rp @Model.TotalAmount.ToString("N0")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap gap-3">
+                        <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-primary py-2 px-4 fw-medium fs-16 text-white">
+                            <i class="ri-download-line me-1"></i> Download PDF
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-primary py-2 px-4 fw-medium fs-16">
+                            <i class="ri-arrow-left-line me-1"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Approval Info -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fs-18 mb-4">Approval Information</h4>
+                    
+                    <div class="d-flex flex-column gap-4">
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0">
+                                <i class="ri-user-star-line wh-40 lh-40 d-inline-block bg-success bg-opacity-10 text-center fs-18 text-success rounded-circle"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1 fs-14 fw-medium">Manager Approval</h6>
+                                <p class="mb-0 fs-14">@Model.ManagerApprover?.FullName</p>
+                                <small class="text-muted">@Model.ManagerApprovalDate?.ToString("dd MMM yyyy HH:mm")</small>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0">
+                                <i class="ri-money-dollar-circle-line wh-40 lh-40 d-inline-block bg-success bg-opacity-10 text-center fs-18 text-success rounded-circle"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1 fs-14 fw-medium">Finance Approval</h6>
+                                <p class="mb-0 fs-14">@Model.FinanceApprover?.FullName</p>
+                                <small class="text-muted">@Model.FinanceApprovalDate?.ToString("dd MMM yyyy HH:mm")</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h4 class="fs-18 mb-4">Timeline</h4>
+                    
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-checkbox-circle-fill text-success fs-18 me-2"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="fs-14">Request Created</span>
+                                <small class="d-block text-muted">@Model.CreatedAt.ToString("dd MMM yyyy")</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-checkbox-circle-fill text-success fs-18 me-2"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="fs-14">Manager Approved</span>
+                                <small class="d-block text-muted">@Model.ManagerApprovalDate?.ToString("dd MMM yyyy")</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-checkbox-circle-fill text-success fs-18 me-2"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="fs-14">Finance Approved</span>
+                                <small class="d-block text-muted">@Model.FinanceApprovalDate?.ToString("dd MMM yyyy")</small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="ri-checkbox-circle-fill text-success fs-18 me-2"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <span class="fs-14">PO Generated</span>
+                                <small class="d-block text-muted">@Model.PoDate?.ToString("dd MMM yyyy")</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

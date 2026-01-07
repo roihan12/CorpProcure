@@ -110,6 +110,12 @@ public static class IdentityConfiguration
 
         services.AddScoped<IBudgetService, BudgetService>();
 
+        // Add Audit Log service for manual logging (login/logout, etc)
+        services.AddScoped<IAuditLogService, AuditLogService>();
+
+        // Add Purchase Order PDF service
+        services.AddScoped<IPurchaseOrderPdfService, PurchaseOrderPdfService>();
+
         return services;
     }
 

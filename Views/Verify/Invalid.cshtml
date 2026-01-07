@@ -1,0 +1,61 @@
+@{
+    ViewData["Title"] = "Invalid Document";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var message = ViewData["Message"]?.ToString() ?? "This document could not be verified.";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center min-vh-100 align-items-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-body p-5 text-center">
+                    <!-- Icon -->
+                    <div class="mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10" 
+                             style="width: 100px; height: 100px;">
+                            <i class="ri-close-circle-fill text-danger" style="font-size: 60px;"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Title -->
+                    <h2 class="fw-bold text-danger mb-2">Verification Failed</h2>
+                    <p class="text-muted mb-4">@message</p>
+                    
+                    <!-- Warning -->
+                    <div class="alert alert-warning bg-warning bg-opacity-10 border-0 text-start mb-4">
+                        <div class="d-flex">
+                            <i class="ri-error-warning-line text-warning me-2 mt-1"></i>
+                            <div>
+                                <strong>Warning:</strong> This document may be:
+                                <ul class="mb-0 mt-2 ps-3">
+                                    <li>Invalid or expired</li>
+                                    <li>Forged or manipulated</li>
+                                    <li>Not yet generated as PO</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="d-flex flex-column gap-2">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary py-2 px-4 fw-medium">
+                            <i class="ri-home-line me-1"></i> Go to Homepage
+                        </a>
+                    </div>
+                    
+                    <!-- Help Text -->
+                    <p class="text-muted small mt-4 mb-0">
+                        If you believe this is an error, please contact the document issuer.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="ri-building-line me-1"></i>
+                    CorpProcure - Enterprise Procurement System
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

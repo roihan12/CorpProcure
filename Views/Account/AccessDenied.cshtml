@@ -1,0 +1,69 @@
+@{
+    ViewData["Title"] = "Access Denied";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <div class="row justify-content-center min-vh-100 align-items-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-body p-5 text-center">
+                    <!-- Icon -->
+                    <div class="mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10" 
+                             style="width: 100px; height: 100px;">
+                            <i class="ri-lock-line text-danger" style="font-size: 48px;"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Title -->
+                    <h2 class="fw-bold text-dark mb-2">Access Denied</h2>
+                    <p class="text-muted mb-4">
+                        Maaf, Anda tidak memiliki izin untuk mengakses halaman ini.
+                    </p>
+                    
+                    <!-- Error Code -->
+                    <div class="bg-light rounded-3 p-3 mb-4">
+                        <div class="d-flex justify-content-center align-items-center gap-3">
+                            <span class="fs-48 fw-bold text-danger">403</span>
+                            <div class="text-start">
+                                <small class="text-muted d-block">Error Code</small>
+                                <span class="fw-medium">Forbidden</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Message -->
+                    <div class="alert alert-warning bg-warning bg-opacity-10 border-0 text-start mb-4">
+                        <div class="d-flex">
+                            <i class="ri-information-line text-warning me-2 mt-1"></i>
+                            <div>
+                                <strong>Kemungkinan penyebab:</strong>
+                                <ul class="mb-0 mt-2 ps-3">
+                                    <li>Anda tidak memiliki role yang diperlukan</li>
+                                    <li>Session Anda telah berakhir</li>
+                                    <li>Halaman ini hanya untuk role tertentu</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="d-flex flex-column gap-2">
+                        <a href="javascript:history.back()" class="btn btn-primary py-2 px-4 fw-medium">
+                            <i class="ri-arrow-left-line me-1"></i> Kembali ke Halaman Sebelumnya
+                        </a>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary py-2 px-4 fw-medium">
+                            <i class="ri-home-line me-1"></i> Ke Dashboard
+                        </a>
+                    </div>
+                    
+                    <!-- Help Text -->
+                    <p class="text-muted small mt-4 mb-0">
+                        Jika Anda yakin seharusnya memiliki akses, silakan hubungi Administrator.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

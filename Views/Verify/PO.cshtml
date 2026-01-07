@@ -1,0 +1,132 @@
+@using CorpProcure.Models
+@model PurchaseRequest
+@{
+    ViewData["Title"] = "Document Verification";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var verificationCode = ViewData["VerificationCode"]?.ToString();
+}
+s
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Verification Header -->
+            <div class="card border-0 shadow-lg rounded-4 mb-4">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10" 
+                             style="width: 100px; height: 100px;">
+                            <i class="ri-checkbox-circle-fill text-success" style="font-size: 60px;"></i>
+                        </div>
+                    </div>
+                    
+                    <h2 class="fw-bold text-success mb-2">Document Verified</h2>
+                    <p class="text-muted mb-4">This is an authentic Purchase Order from CorpProcure System</p>
+                    
+                    <div class="bg-light rounded-3 p-3 mb-4">
+                        <div class="row">
+                            <div class="col-md-6 text-start">
+                                <small class="text-muted d-block">PO Number</small>
+                                <span class="fw-bold fs-5 text-primary">@Model.PoNumber</span>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <small class="text-muted d-block">Verification Code</small>
+                                <span class="fw-bold fs-5">@verificationCode</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Details -->
+            <div class="card border-0 shadow rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4">
+                        <i class="ri-file-text-line me-2 text-primary"></i>
+                        Document Details
+                    </h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 35%;" class="text-muted">Request Number</th>
+                                    <td class="fw-medium">@Model.RequestNumber</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">PO Date</th>
+                                    <td>@Model.PoDate?.ToString("dd MMMM yyyy")</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Requester</th>
+                                    <td>@Model.Requester?.FullName</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Department</th>
+                                    <td>@Model.Department?.Name</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Total Amount</th>
+                                    <td class="fw-bold text-success fs-5">Rp @Model.TotalAmount.ToString("N0")</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted">Items</th>
+                                    <td>@Model.Items.Count item(s)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="fw-bold mb-4">
+                        <i class="ri-shield-check-line me-2 text-success"></i>
+                        Approval Information
+                    </h5>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="ri-user-star-fill text-primary me-3 fs-4"></i>
+                                <div>
+                                    <small class="text-muted d-block">Manager Approval</small>
+                                    <span class="fw-medium">@Model.ManagerApprover?.FullName</span>
+                                    <small class="d-block text-muted">@Model.ManagerApprovalDate?.ToString("dd MMM yyyy HH:mm")</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="ri-money-dollar-circle-fill text-success me-3 fs-4"></i>
+                                <div>
+                                    <small class="text-muted d-block">Finance Approval</small>
+                                    <span class="fw-medium">@Model.FinanceApprover?.FullName</span>
+                                    <small class="d-block text-muted">@Model.FinanceApprovalDate?.ToString("dd MMM yyyy HH:mm")</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="alert alert-info bg-info bg-opacity-10 border-0">
+                        <div class="d-flex">
+                            <i class="ri-information-line me-2 mt-1"></i>
+                            <div>
+                                <strong>Verification Time:</strong> @DateTime.Now.ToString("dd MMMM yyyy HH:mm:ss")
+                                <br>
+                                <small class="text-muted">This verification confirms the document is authentic and was generated by CorpProcure System.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="ri-building-line me-1"></i>
+                    Powered by CorpProcure - Enterprise Procurement System
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
