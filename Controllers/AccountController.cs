@@ -154,6 +154,41 @@ public class AccountController : Controller
         return View(user);
     }
 
+    // POST: /Account/Profile
+    [HttpPost]
+    [Authorize]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Profile(UpdateProfileDto model)
+    {
+        if (!ModelState.IsValid)
+        {
+            // Re-fetch user data to redisplay the form
+            var currentUser = await _authService.GetUserByIdAsync(User.GetUserId());
+            if (currentUser != null)
+            {
+                model.Username = currentUser.Username;
+                model.Email = currentUser.Email;
+            }
+            return View(model);
+        }
+
+        var userId = User.GetUserId();
+        var result = await _authService.UpdateProfileAsync(userId, model);
+
+        if (result.Success)
+        {
+            TempData["StatusMessage"] = "Profile berhasil diperbarui";
+            TempData["StatusType"] = "Success";
+        }
+        else
+        {
+            TempData["StatusMessage"] = result.Message;
+            TempData["StatusType"] = "Error";
+        }
+
+        return RedirectToAction(nameof(Profile));
+    }
+
     // GET: /Account/ChangePassword
     [HttpGet]
     [Authorize]

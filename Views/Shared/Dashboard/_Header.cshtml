@@ -36,7 +36,8 @@
                     </li>
                     <li class="header-right-item">
                         <div class="dropdown admin-profile">
-                            <div class="d-xxl-flex align-items-center bg-transparent border-0 text-start p-0 cursor">
+                            <button class="d-xxl-flex align-items-center bg-transparent border-0 text-start p-0 cursor dropdown-toggle" 
+                                    type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 <div class="flex-shrink-0">
                                     <img class="rounded-circle wh-40 administrator" src="https://placehold.co/44x44.png?text=No+Image"
                                         alt="admin" />
@@ -45,14 +46,41 @@
                                     <div class="d-flex align-items-center justify-content-between">
                                         <div class="d-none d-xxl-block">
                                             <div class="d-flex align-content-center">
-                                                <h3>
-                                                    @User.Identity.Name
+                                                <h3 class="mb-0 fs-14 fw-medium">
+                                                    @User.Identity?.Name
                                                 </h3>
                                             </div>
+                                            <span class="fs-12 text-muted">
+                                                @if (User.IsInRole("Admin")) { <text>Administrator</text> }
+                                                else if (User.IsInRole("Manager")) { <text>Manager</text> }
+                                                else if (User.IsInRole("Finance")) { <text>Finance</text> }
+                                                else if (User.IsInRole("Procurement")) { <text>Procurement</text> }
+                                                else { <text>Staff</text> }
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2 w-100" aria-labelledby="userDropdown" style="min-width: 200px;">
+                                <li>
+                                    <a class="dropdown-item py-2" asp-controller="Account" asp-action="Profile">
+                                        <i class="ri-user-line me-2 text-primary"></i> My Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" asp-controller="Account" asp-action="ChangePassword">
+                                        <i class="ri-lock-line me-2 text-warning"></i> Change Password
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-2"></li>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline w-100">
+                                        <button type="submit" class="dropdown-item py-2 text-danger">
+                                            <i class="ri-logout-box-line me-2"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
                         </div>
                     </li>
                 </ul>

@@ -1,4 +1,4 @@
-@model CorpProcure.DTOs.Auth.ProfileViewDto
+@model CorpProcure.DTOs.Auth.UserDto
 
 @{
     ViewData["Title"] = "User Profile";
@@ -27,7 +27,7 @@
                                 <div class="avatar-placeholder bg-primary-div rounded-circle d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
                                     <span class="text-white fs-1" style="line-height: 1; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">@Model.FullName?.Substring(0, 1)</span>
                                 </div>
-                                <h4 class="mb-2">@Model.FullName</h4>
+                                <h4 class="mb-2">@Model.Name</h4>
                                 <p class="text-muted mb-1">@Model.Position</p>
                                 <p class="text-muted mb-3">@Model.Department</p>
                                 <a href="@Url.Action("ChangePassword", "Account")" class="btn btn-outline-primary btn-sm">

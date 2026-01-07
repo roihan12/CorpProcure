@@ -45,4 +45,9 @@ public interface IAuthenticationUserService
     /// Get user by email
     /// </summary>
     Task<UserDto?> GetUserByEmailAsync(string email);
+
+    /// <summary>
+    /// Update user profile
+    /// </summary>
+    Task<AuthResultDto> UpdateProfileAsync(Guid userId, UpdateProfileDto dto);
 }

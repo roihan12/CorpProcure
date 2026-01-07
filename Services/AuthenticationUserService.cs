@@ -1,6 +1,8 @@
-﻿using CorpProcure.DTOs.Auth;
+﻿using CorpProcure.Data;
+using CorpProcure.DTOs.Auth;
 using CorpProcure.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace CorpProcure.Services;
 
@@ -11,13 +13,16 @@ public class AuthenticationUserService : IAuthenticationUserService
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
+    private readonly ApplicationDbContext _context;
 
     public AuthenticationUserService(
         UserManager<User> userManager,
-        SignInManager<User> signInManager)
+        SignInManager<User> signInManager,
+        ApplicationDbContext context)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _context = context;
     }
 
     public async Task<AuthResultDto> RegisterAsync(RegisterDto dto)
@@ -295,13 +300,17 @@ public class AuthenticationUserService : IAuthenticationUserService
 
     public async Task<UserDto?> GetUserByIdAsync(Guid userId)
     {
-        var user = await _userManager.FindByIdAsync(userId.ToString());
+        var user = await _context.Users
+            .Include(u => u.Department)
+            .FirstOrDefaultAsync(u => u.Id == userId);
         return user != null ? MapToUserDto(user) : null;
     }
 
     public async Task<UserDto?> GetUserByEmailAsync(string email)
     {
-        var user = await _userManager.FindByEmailAsync(email);
+        var user = await _context.Users
+            .Include(u => u.Department)
+            .FirstOrDefaultAsync(u => u.Email == email);
         return user != null ? MapToUserDto(user) : null;
     }
 
@@ -310,13 +319,58 @@ public class AuthenticationUserService : IAuthenticationUserService
         return new UserDto
         {
             Id = user.Id,
-            Name = user.FullName!,
-            Email = user.Email!,
+            Name = user.FullName ?? string.Empty,
+            Username = user.UserName ?? string.Empty,
+            FullName = user.FullName ?? string.Empty,
+            Email = user.Email ?? string.Empty,
             Role = user.Role,
             DepartmentId = user.DepartmentId,
+            Department = user.Department?.Name,
+            Position = user.Position,
             PhoneNumber = user.PhoneNumber,
             IsActive = user.IsActive,
             LastLoginAt = user.LastLoginAt
         };
     }
+
+    public async Task<AuthResultDto> UpdateProfileAsync(Guid userId, UpdateProfileDto dto)
+    {
+        try
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return new AuthResultDto
+                {
+                    Success = false,
+                    Message = "User tidak ditemukan",
+                    Errors = new List<string> { "User tidak valid" }
+                };
+            }
+
+            // Update allowed fields
+            user.FullName = dto.FullName;
+            user.Position = dto.Position;
+            user.PhoneNumber = dto.PhoneNumber;
+            user.LastModified = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+
+            return new AuthResultDto
+            {
+                Success = true,
+                Message = "Profile berhasil diperbarui"
+            };
+        }
+        catch (Exception ex)
+        {
+            return new AuthResultDto
+            {
+                Success = false,
+                Message = "Terjadi kesalahan saat memperbarui profile",
+                Errors = new List<string> { ex.Message }
+            };
+        }
+    }
 }
+
