@@ -1,0 +1,297 @@
+﻿@model List<CorpProcure.DTOs.User.UserListDto>
+@using CorpProcure.Models.Enums
+
+@{
+    ViewData["Title"] = "Manajemen Pengguna";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var searchTerm = ViewData["SearchTerm"] as string;
+    var departmentId = ViewData["DepartmentId"] as Guid?;
+    var role = ViewData["Role"] as UserRole?;
+    var isActive = ViewData["IsActive"] as bool?;
+    
+    int currentPage = (int)(ViewData["CurrentPage"] ?? 1);
+    int totalPages = (int)(ViewData["TotalPages"] ?? 1);
+    int totalItems = (int)(ViewData["TotalItems"] ?? 0);
+    bool hasPreviousPage = (bool)(ViewData["HasPreviousPage"] ?? false);
+    bool hasNextPage = (bool)(ViewData["HasNextPage"] ?? false);
+}
+
+<div class="main-content-container overflow-hidden">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Manajemen Pengguna</h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Manajemen Pengguna</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="ri-checkbox-circle-line me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ri-error-warning-line me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Card -->
+    <div class="card bg-white border-0 rounded-3 mb-4">
+        <div class="card-body p-0">
+            <!-- Toolbar -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-4">
+                <form asp-action="Index" method="get" class="d-flex flex-wrap gap-2 align-items-end">
+                    <div class="position-relative table-src-form">
+                        <input type="text" name="searchTerm" class="form-control ps-5"
+                               placeholder="Cari nama, email, jabatan..." value="@searchTerm">
+                        <button type="submit" class="border-0 bg-transparent position-absolute top-50 start-0 translate-middle-y ms-3">
+                            <i class="material-symbols-outlined">search</i>
+                        </button>
+                    </div>
+                    <select name="departmentId" class="form-select" style="max-width: 180px;" asp-items="@ViewBag.Departments">
+                        <option value="">Semua Departemen</option>
+                    </select>
+                    <select name="role" class="form-select" style="max-width: 140px;" asp-items="@ViewBag.Roles">
+                        <option value="">Semua Role</option>
+                    </select>
+                    <select name="isActive" class="form-select" style="max-width: 130px;">
+                        <option value="">Semua Status</option>
+                        <option value="true" selected="@(isActive == true)">Aktif</option>
+                        <option value="false" selected="@(isActive == false)">Tidak Aktif</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-primary py-2 px-3 fs-14 fw-medium rounded-3">
+                        <i class="ri-search-line"></i>
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary py-2 px-3 fs-14 fw-medium rounded-3">
+                        <i class="ri-refresh-line"></i>
+                    </a>
+                </form>
+
+                <a asp-action="Create" class="btn btn-primary py-2 px-4 fs-14 fw-medium rounded-3">
+                    <i class="ri-user-add-line me-1"></i> Tambah User
+                </a>
+            </div>
+
+            <!-- Table -->
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info m-4">
+                    <i class="ri-information-line me-2"></i> Tidak ada data pengguna ditemukan.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>Departemen</th>
+                                <th>Jabatan</th>
+                                <th>Role</th>
+                                <th class="text-center">Status</th>
+                                <th>Login Terakhir</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-initials bg-primary text-white rounded-circle me-2">
+                                                @user.FullName.Substring(0, 1).ToUpper()
+                                            </div>
+                                            <span class="fw-medium">@user.FullName</span>
+                                        </div>
+                                    </td>
+                                    <td>@user.Email</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">@user.DepartmentCode</span>
+                                        @user.DepartmentName
+                                    </td>
+                                    <td>@(user.Position ?? "-")</td>
+                                    <td>
+                                        @{
+                                            var roleBadgeClass = user.RoleName switch
+                                            {
+                                                "Admin" => "bg-danger",
+                                                "Manager" => "bg-info",
+                                                "Finance" => "bg-success",
+                                                "Procurement" => "bg-warning text-dark",
+                                                _ => "bg-secondary"
+                                            };
+                                        }
+                                        <span class="badge @roleBadgeClass">@user.RoleName</span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (user.IsLockedOut)
+                                        {
+                                            <span class="badge bg-danger bg-opacity-10 text-danger p-2 fs-12 fw-normal">
+                                                <i class="ri-lock-fill"></i> Terkunci
+                                            </span>
+                                        }
+                                        else if (user.IsActive)
+                                        {
+                                            <span class="badge bg-success bg-opacity-10 text-success p-2 fs-12 fw-normal">Aktif</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary p-2 fs-12 fw-normal">Tidak Aktif</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (user.LastLoginAt.HasValue)
+                                        {
+                                            @user.LastLoginAt.Value.ToString("dd/MM/yyyy HH:mm")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Belum login</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-action="Details" asp-route-id="@user.Id"
+                                               class="btn btn-sm btn-outline-primary" title="Detail">
+                                                <i class="ri-eye-line"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@user.Id"
+                                               class="btn btn-sm btn-outline-warning" title="Edit">
+                                                <i class="ri-edit-line"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center p-4 mt-3">
+                    <div class="text-muted fs-13">
+                        Showing @(((int)currentPage - 1) * 10 + 1)-@Math.Min(totalItems, currentPage * 10) 
+                        of @totalItems users
+                    </div>
+                    
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-light mb-0">
+                            <!-- Previous page button -->
+                            <li class="page-item @(!hasPreviousPage ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" 
+                                   asp-route-page="@(currentPage - 1)" 
+                                   asp-route-searchTerm="@searchTerm"
+                                   asp-route-departmentId="@departmentId"
+                                   asp-route-role="@role"
+                                   asp-route-isActive="@isActive"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">
+                                        <i class="ri-arrow-left-s-line align-middle"></i>
+                                    </span>
+                                </a>
+                            </li>
+                            
+                            <!-- Page numbers -->
+                            @{
+                                int startPage = Math.Max(1, currentPage - 2);
+                                int endPage = Math.Min(totalPages, currentPage + 2);
+                                
+                                if (startPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-page="1" 
+                                           asp-route-searchTerm="@searchTerm"
+                                           asp-route-departmentId="@departmentId"
+                                           asp-route-role="@role"
+                                           asp-route-isActive="@isActive">1</a>
+                                    </li>
+                                    
+                                    if (startPage > 2)
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    }
+                                }
+                                
+                                for (int i = startPage; i <= endPage; i++)
+                                {
+                                    <li class="page-item @(i == currentPage ? "active" : "")">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@i" 
+                                           asp-route-searchTerm="@searchTerm"
+                                           asp-route-departmentId="@departmentId"
+                                           asp-route-role="@role"
+                                           asp-route-isActive="@isActive">@i</a>
+                                    </li>
+                                }
+                                
+                                if (endPage < totalPages)
+                                {
+                                    if (endPage < totalPages - 1)
+                                    {
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    }
+                                    
+                                    <li class="page-item">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@totalPages" 
+                                           asp-route-searchTerm="@searchTerm"
+                                           asp-route-departmentId="@departmentId"
+                                           asp-route-role="@role"
+                                           asp-route-isActive="@isActive">@totalPages</a>
+                                    </li>
+                                }
+                            }
+                            
+                            <!-- Next page button -->
+                            <li class="page-item @(!hasNextPage ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" 
+                                   asp-route-page="@(currentPage + 1)" 
+                                   asp-route-searchTerm="@searchTerm"
+                                   asp-route-departmentId="@departmentId"
+                                   asp-route-role="@role"
+                                   asp-route-isActive="@isActive"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">
+                                        <i class="ri-arrow-right-s-line align-middle"></i>
+                                    </span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-initials {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+</style>

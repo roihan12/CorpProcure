@@ -116,6 +116,12 @@ public static class IdentityConfiguration
         // Add Purchase Order PDF service
         services.AddScoped<IPurchaseOrderPdfService, PurchaseOrderPdfService>();
 
+        // Add Department Management service
+        services.AddScoped<IDepartmentService, DepartmentService>();
+
+        // Add User Management service
+        services.AddScoped<IUserManagementService, UserManagementService>();
+
         return services;
     }
 

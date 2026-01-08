@@ -143,17 +143,18 @@
                     <span class="menu-title-text">MASTER DATA</span>
                 </li>
 
+
                 <li class="menu-item">
-                    <a asp-controller="Department" asp-action="Index"
-                       class="menu-link @(Context.Request.Path.StartsWithSegments("/Department") ? "active" : "")">
+                    <a asp-controller="Departments" asp-action="Index"
+                       class="menu-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Department" ? "active" : "")">
                         <span class="material-symbols-outlined menu-icon">corporate_fare</span>
                         <span class="title">Departments</span>
                     </a>
                 </li>
 
                 <li class="menu-item">
-                    <a asp-controller="User" asp-action="Index"
-                       class="menu-link @(Context.Request.Path.StartsWithSegments("/User") ? "active" : "")">
+                    <a asp-controller="UserManagement" asp-action="Index"
+                       class="menu-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" ? "active" : "")">
                         <span class="material-symbols-outlined menu-icon">group</span>
                         <span class="title">Users</span>
                     </a>

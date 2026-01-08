@@ -1,0 +1,124 @@
+﻿@model CorpProcure.DTOs.User.CreateUserDto
+@using CorpProcure.Models.Enums
+
+@{
+    ViewData["Title"] = "Tambah User Baru";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="main-content-container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Tambah User Baru</h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Dashboard</a></li>
+                <li class="breadcrumb-item"><a asp-action="Index">Manajemen Pengguna</a></li>
+                <li class="breadcrumb-item active">Tambah</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Alert -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="ri-error-warning-line me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Form Card -->
+    <div class="card bg-white border-0 rounded-3">
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <!-- Personal Information -->
+                <h6 class="text-muted mb-3">
+                    <i class="ri-user-line me-2"></i>Informasi Pribadi
+                </h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="FullName" class="form-label fw-medium">Nama Lengkap <span class="text-danger">*</span></label>
+                        <input asp-for="FullName" class="form-control" placeholder="Masukkan nama lengkap">
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label fw-medium">Email <span class="text-danger">*</span></label>
+                        <input asp-for="Email" class="form-control" placeholder="contoh@email.com">
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="PhoneNumber" class="form-label fw-medium">No. Telepon</label>
+                        <input asp-for="PhoneNumber" class="form-control" placeholder="08xxxxxxxxxx">
+                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Position" class="form-label fw-medium">Jabatan</label>
+                        <input asp-for="Position" class="form-control" placeholder="Masukkan jabatan">
+                        <span asp-validation-for="Position" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Account Information -->
+                <h6 class="text-muted mb-3">
+                    <i class="ri-shield-keyhole-line me-2"></i>Informasi Akun
+                </h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="Password" class="form-label fw-medium">Password <span class="text-danger">*</span></label>
+                        <input asp-for="Password" class="form-control" type="password">
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                        <small class="text-muted">Minimal 8 karakter</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmPassword" class="form-label fw-medium">Konfirmasi Password <span class="text-danger">*</span></label>
+                        <input asp-for="ConfirmPassword" class="form-control" type="password">
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Organization Information -->
+                <h6 class="text-muted mb-3">
+                    <i class="ri-building-line me-2"></i>Informasi Organisasi
+                </h6>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="DepartmentId" class="form-label fw-medium">Departemen <span class="text-danger">*</span></label>
+                        <select asp-for="DepartmentId" class="form-select" asp-items="@ViewBag.Departments">
+                            <option value="">-- Pilih Departemen --</option>
+                        </select>
+                        <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Role" class="form-label fw-medium">Role <span class="text-danger">*</span></label>
+                        <select asp-for="Role" class="form-select" asp-items="@ViewBag.Roles">
+                            <option value="">-- Pilih Role --</option>
+                        </select>
+                        <span asp-validation-for="Role" class="text-danger small"></span>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsActive" class="form-check-input" role="switch">
+                            <label asp-for="IsActive" class="form-check-label">Aktifkan user setelah dibuat</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="ri-save-line me-1"></i> Simpan
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">Batal</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

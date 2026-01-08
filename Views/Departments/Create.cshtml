@@ -1,0 +1,73 @@
+﻿@model CorpProcure.DTOs.Department.CreateDepartmentDto
+@{
+    ViewData["Title"] = "Add Department";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="main-content-container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Add Department</h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Dashboard</a></li>
+                <li class="breadcrumb-item"><a asp-action="Index">Departments</a></li>
+                <li class="breadcrumb-item active">Add</li>
+            </ol>
+        </nav>
+    </div>
+    <!-- Alert -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="ri-error-warning-line me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    <!-- Form Card -->
+    <div class="card bg-white border-0 rounded-3">
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <!-- Code -->
+                    <div class="col-md-3">
+                        <label asp-for="Code" class="form-label fw-medium">Code <span class="text-danger">*</span></label>
+                        <input asp-for="Code" class="form-control text-uppercase" placeholder="e.g. IT, HR, FIN" maxlength="10">
+                        <span asp-validation-for="Code" class="text-danger small"></span>
+                    </div>
+                    <!-- Name -->
+                    <div class="col-md-9">
+                        <label asp-for="Name" class="form-label fw-medium">Department Name <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control" placeholder="e.g. Information Technology">
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+                    <!-- Description -->
+                    <div class="col-12">
+                        <label asp-for="Description" class="form-label fw-medium">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3"
+                                  placeholder="Brief description of this department..."></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+                    <!-- Manager -->
+                    <div class="col-md-6">
+                        <label asp-for="ManagerId" class="form-label fw-medium">Manager</label>
+                        <select asp-for="ManagerId" asp-items="ViewBag.Managers" class="form-select">
+                            <option value="">-- Select Manager (Optional) --</option>
+                        </select>
+                        <span asp-validation-for="ManagerId" class="text-danger small"></span>
+                    </div>
+                </div>
+                <!-- Buttons -->
+                <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="ri-save-line me-1"></i> Save
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
