@@ -1,6 +1,5 @@
 ﻿using CorpProcure.Data.Interceptors;
 using CorpProcure.Models;
-using CorpProcure.Models.Base;
 using CorpProcure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -239,16 +238,16 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     {
         // Capture audit entries BEFORE saving (entities still have their original states)
         List<AuditLog>? auditLogs = null;
-        
+
         if (_currentUserService != null)
         {
             var currentUserId = _currentUserService.UserId;
             var currentUserName = _currentUserService.UserName ?? "System";
-            
+
             // Generate audit logs BEFORE save (while entities still have their states)
             auditLogs = AuditInterceptor.GenerateAuditLogs(this, currentUserId, currentUserName);
         }
-        
+
         // Save changes
         var result = base.SaveChanges();
 
@@ -260,7 +259,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
             {
                 Entry(auditLog).State = EntityState.Detached;
             }
-            
+
             AuditLogs.AddRange(auditLogs);
             base.SaveChanges(); // Save audit logs
         }
@@ -275,16 +274,16 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     {
         // Capture audit entries BEFORE saving (entities still have their original states)
         List<AuditLog>? auditLogs = null;
-        
+
         if (_currentUserService != null)
         {
             var currentUserId = _currentUserService.UserId;
             var currentUserName = _currentUserService.UserName ?? "System";
-            
+
             // Generate audit logs BEFORE save (while entities still have their states)
             auditLogs = AuditInterceptor.GenerateAuditLogs(this, currentUserId, currentUserName);
         }
-        
+
         // Save changes
         var result = await base.SaveChangesAsync(cancellationToken);
 
@@ -296,7 +295,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
             {
                 Entry(auditLog).State = EntityState.Detached;
             }
-            
+
             await AuditLogs.AddRangeAsync(auditLogs, cancellationToken);
             await base.SaveChangesAsync(cancellationToken); // Save audit logs
         }

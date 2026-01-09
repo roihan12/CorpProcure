@@ -1,0 +1,155 @@
+@model CorpProcure.DTOs.Budget.BudgetDetailDto
+@{
+    ViewData["Title"] = $"Budget: {Model.DepartmentName} {Model.Year}";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    
+    var usageClass = Model.UsagePercentage >= 90 ? "text-danger" :
+                     Model.UsagePercentage >= 70 ? "text-warning" : "text-success";
+}
+<div class="main-content-container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Budget Details</h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Dashboard</a></li>
+                <li class="breadcrumb-item"><a asp-action="Index">Budget</a></li>
+                <li class="breadcrumb-item active">@Model.DepartmentCode @Model.Year</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row">
+        <!-- Main Info -->
+        <div class="col-lg-8">
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-primary fs-14 px-3 py-2">@Model.DepartmentCode</span>
+                        <div>
+                            <h5 class="mb-0">@Model.DepartmentName</h5>
+                            <small class="text-muted">Fiscal Year @Model.Year</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Budget Overview -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3">
+                            <div class="border rounded-3 p-3 h-100 text-center">
+                                <label class="text-muted small d-block">Total Budget</label>
+                                <h4 class="fw-bold mb-0 text-primary">Rp @Model.TotalAmount.ToString("N0")</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded-3 p-3 h-100 text-center">
+                                <label class="text-muted small d-block">Used</label>
+                                <h4 class="fw-bold mb-0 text-success">Rp @Model.CurrentUsage.ToString("N0")</h4>
+                                <small class="@usageClass">@Model.UsagePercentage%</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded-3 p-3 h-100 text-center">
+                                <label class="text-muted small d-block">Reserved</label>
+                                <h4 class="fw-bold mb-0 text-warning">Rp @Model.ReservedAmount.ToString("N0")</h4>
+                                <small class="text-muted">@Model.ReservedPercentage%</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border rounded-3 p-3 h-100 text-center">
+                                <label class="text-muted small d-block">Remaining</label>
+                                <h4 class="fw-bold mb-0 @(Model.RemainingAmount > 0 ? "text-info" : "text-danger")">
+                                    Rp @Model.RemainingAmount.ToString("N0")
+                                </h4>
+                                <small class="text-muted">@Model.RemainingPercentage%</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <label class="text-muted small d-block mb-2">Budget Utilization</label>
+                        <div class="progress" style="height: 24px;">
+                            @if (Model.UsagePercentage > 0)
+                            {
+                                <div class="progress-bar bg-success" role="progressbar"
+                                     style="width: @Model.UsagePercentage%;"
+                                     title="Used: @Model.UsagePercentage%">
+                                    @if (Model.UsagePercentage >= 10)
+                                    {
+                                        <span class="small">Used @Model.UsagePercentage%</span>
+                                    }
+                                </div>
+                            }
+                            @if (Model.ReservedPercentage > 0)
+                            {
+                                <div class="progress-bar bg-warning" role="progressbar"
+                                     style="width: @Model.ReservedPercentage%;"
+                                     title="Reserved: @Model.ReservedPercentage%">
+                                    @if (Model.ReservedPercentage >= 10)
+                                    {
+                                        <span class="small">Reserved @Model.ReservedPercentage%</span>
+                                    }
+                                </div>
+                            }
+                            @if (Model.RemainingPercentage > 0)
+                            {
+                                <div class="progress-bar bg-secondary bg-opacity-25" role="progressbar"
+                                     style="width: @Model.RemainingPercentage%;"></div>
+                            }
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 small text-muted">
+                            <span><i class="ri-checkbox-blank-circle-fill text-success me-1"></i> Used</span>
+                            <span><i class="ri-checkbox-blank-circle-fill text-warning me-1"></i> Reserved (Pending)</span>
+                            <span><i class="ri-checkbox-blank-circle-fill text-secondary opacity-25 me-1"></i> Available</span>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="border-top pt-3">
+                            <label class="text-muted small">Notes</label>
+                            <p class="mb-0">@Model.Notes</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0">Info</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Created</span>
+                            <span>@Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</span>
+                        </li>
+                        <li class="d-flex justify-content-between py-2 border-bottom">
+                            <span class="text-muted">Updated</span>
+                            <span>@Model.LastUpdatedAt.ToString("dd MMM yyyy HH:mm")</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card bg-white border-0 rounded-3">
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="ri-edit-line me-1"></i> Edit
+                        </a>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="ri-arrow-left-line me-1"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

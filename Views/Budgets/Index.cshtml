@@ -1,0 +1,247 @@
+@model List<CorpProcure.DTOs.Budget.BudgetListDto>
+@{
+    ViewData["Title"] = "Budget Overview";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    
+    int currentPage = (int)(ViewData["CurrentPage"] ?? 1);
+    int totalPages = (int)(ViewData["TotalPages"] ?? 1);
+    int totalItems = (int)(ViewData["TotalItems"] ?? 0);
+    bool hasPreviousPage = (bool)(ViewData["HasPreviousPage"] ?? false);
+    bool hasNextPage = (bool)(ViewData["HasNextPage"] ?? false);
+    Guid? selectedDepartmentId = (Guid?)ViewData["SelectedDepartmentId"];
+    int? selectedYear = (int?)ViewData["SelectedYear"];
+    
+    // Role-based UI flags
+    bool canFilterDepartment = (bool)(ViewData["CanFilterDepartment"] ?? false);
+    bool canManageBudget = (bool)(ViewData["CanManageBudget"] ?? false);
+}
+<div class="main-content-container overflow-hidden">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Budget Management</h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Budget</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="ri-checkbox-circle-line me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ri-error-warning-line me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Card -->
+    <div class="card bg-white border-0 rounded-3 mb-4">
+        <div class="card-body p-0">
+            <!-- Toolbar -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-4">
+                <form asp-action="Index" method="get" class="d-flex gap-2 flex-wrap">
+                    @if (canFilterDepartment)
+                    {
+                        <select name="departmentId" asp-items="ViewBag.Departments" class="form-select" style="width: 200px;">
+                            <option value="">All Departments</option>
+                        </select>
+                    }
+                    <select name="year" asp-items="ViewBag.Years" class="form-select" style="width: 120px;">
+                        <option value="">All Years</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="ri-filter-line me-1"></i> Filter
+                    </button>
+                </form>
+
+                @if (canManageBudget)
+                {
+                    <a asp-action="Create" class="btn btn-primary py-2 px-4 fs-14 fw-medium rounded-3">
+                        <i class="ri-add-line me-1"></i> Add Budget
+                    </a>
+                }
+            </div>
+
+            <!-- Table -->
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info m-4">
+                    <i class="ri-information-line me-2"></i> No budgets found.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Department</th>
+                                <th class="text-center">Year</th>
+                                <th class="text-end">Total Budget</th>
+                                <th class="text-end">Used</th>
+                                <th class="text-end">Reserved</th>
+                                <th style="min-width: 200px;">Utilization</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var usageClass = item.UsagePercentage >= 90 ? "bg-danger" :
+                                                 item.UsagePercentage >= 70 ? "bg-warning" : "bg-success";
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-primary me-1">@item.DepartmentCode</span>
+                                        <span class="fw-medium">@item.DepartmentName</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">@item.Year</span>
+                                    </td>
+                                    <td class="text-end fw-medium">@item.TotalAmount.ToString("N0")</td>
+                                    <td class="text-end">@item.CurrentUsage.ToString("N0")</td>
+                                    <td class="text-end">
+                                        @if (item.ReservedAmount > 0)
+                                        {
+                                            <span class="text-warning">@item.ReservedAmount.ToString("N0")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 8px;">
+                                                <div class="progress-bar @usageClass" role="progressbar"
+                                                     style="width: @item.UsagePercentage%"></div>
+                                                @if (item.ReservedPercentage > 0)
+                                                {
+                                                    <div class="progress-bar bg-warning bg-opacity-50" role="progressbar"
+                                                         style="width: @item.ReservedPercentage%"></div>
+                                                }
+                                            </div>
+                                            <span class="small text-nowrap" style="width: 45px;">
+                                                @item.UsagePercentage.ToString("N0")%
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-action="Details" asp-route-id="@item.Id"
+                                               class="btn btn-sm btn-outline-primary" title="Details">
+                                                <i class="ri-eye-line"></i>
+                                            </a>
+                                            @if (canManageBudget)
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@item.Id"
+                                                   class="btn btn-sm btn-outline-warning" title="Edit">
+                                                    <i class="ri-edit-line"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        data-bs-toggle="modal" data-bs-target="#deleteModal-@item.Id"
+                                                        title="Delete">
+                                                    <i class="ri-delete-bin-line"></i>
+                                                </button>
+                                            }
+                                        </div>
+
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade" id="deleteModal-@item.Id" tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Confirm Delete</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body text-start">
+                                                        <p>Are you sure you want to delete budget for
+                                                            <strong>@item.DepartmentName</strong> year <strong>@item.Year</strong>?
+                                                        </p>
+                                                        @if (item.CurrentUsage > 0 || item.ReservedAmount > 0)
+                                                        {
+                                                            <div class="alert alert-danger py-2">
+                                                                <i class="ri-error-warning-line me-1"></i>
+                                                                This budget has usage of <strong>@item.CurrentUsage.ToString("N0")</strong>
+                                                                and cannot be deleted.
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-danger"
+                                                                    @(item.CurrentUsage > 0 || item.ReservedAmount > 0 ? "disabled" : "")>
+                                                                Delete
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (totalPages > 1)
+                {
+                    <div class="d-flex justify-content-between align-items-center p-4 mt-3">
+                        <div class="text-muted fs-13">
+                            Showing @(((int)currentPage - 1) * 10 + 1)-@Math.Min(totalItems, currentPage * 10)
+                            of @totalItems budgets
+                        </div>
+
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-light mb-0">
+                                <li class="page-item @(!hasPreviousPage ? "disabled" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-page="@(currentPage - 1)"
+                                       asp-route-departmentId="@selectedDepartmentId"
+                                       asp-route-year="@selectedYear">
+                                        <i class="ri-arrow-left-s-line"></i>
+                                    </a>
+                                </li>
+                                @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                                {
+                                    <li class="page-item @(i == currentPage ? "active" : "")">
+                                        <a class="page-link" asp-action="Index" asp-route-page="@i"
+                                           asp-route-departmentId="@selectedDepartmentId"
+                                           asp-route-year="@selectedYear">@i</a>
+                                    </li>
+                                }
+                                <li class="page-item @(!hasNextPage ? "disabled" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-page="@(currentPage + 1)"
+                                       asp-route-departmentId="@selectedDepartmentId"
+                                       asp-route-year="@selectedYear">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

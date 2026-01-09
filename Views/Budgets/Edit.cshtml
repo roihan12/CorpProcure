@@ -1,0 +1,106 @@
+@model CorpProcure.DTOs.Budget.UpdateBudgetDto
+@{
+    ViewData["Title"] = "Edit Budget";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    
+    var departmentName = ViewData["DepartmentName"]?.ToString() ?? "-";
+    var year = ViewData["Year"];
+    var currentUsage = (decimal)(ViewData["CurrentUsage"] ?? 0);
+    var reservedAmount = (decimal)(ViewData["ReservedAmount"] ?? 0);
+    var minAmount = currentUsage + reservedAmount;
+}
+<div class="main-content-container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Edit Budget</h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Dashboard</a></li>
+                <li class="breadcrumb-item"><a asp-action="Index">Budget</a></li>
+                <li class="breadcrumb-item active">Edit</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Alert -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="ri-error-warning-line me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Info Card -->
+    <div class="card bg-light border-0 rounded-3 mb-3">
+        <div class="card-body py-3">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="text-muted small">Department</label>
+                    <p class="fw-medium mb-0">@departmentName</p>
+                </div>
+                <div class="col-md-2">
+                    <label class="text-muted small">Fiscal Year</label>
+                    <p class="fw-medium mb-0">@year</p>
+                </div>
+                <div class="col-md-3">
+                    <label class="text-muted small">Current Usage</label>
+                    <p class="fw-medium mb-0 text-success">Rp @currentUsage.ToString("N0")</p>
+                </div>
+                <div class="col-md-3">
+                    <label class="text-muted small">Reserved Amount</label>
+                    <p class="fw-medium mb-0 text-warning">Rp @reservedAmount.ToString("N0")</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card bg-white border-0 rounded-3">
+        <div class="card-body p-4">
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <div class="row g-3">
+                    <!-- Total Amount -->
+                    <div class="col-md-6">
+                        <label asp-for="TotalAmount" class="form-label fw-medium">Total Budget <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">Rp</span>
+                            <input asp-for="TotalAmount" class="form-control" type="number" 
+                                   min="@minAmount" step="1000">
+                        </div>
+                        <span asp-validation-for="TotalAmount" class="text-danger small"></span>
+                        @if (minAmount > 0)
+                        {
+                            <small class="text-muted">
+                                Minimum: Rp @minAmount.ToString("N0") (Used + Reserved)
+                            </small>
+                        }
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="col-12">
+                        <label asp-for="Notes" class="form-label fw-medium">Notes</label>
+                        <textarea asp-for="Notes" class="form-control" rows="3"
+                                  placeholder="Additional notes about this budget..."></textarea>
+                        <span asp-validation-for="Notes" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="ri-save-line me-1"></i> Update
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,103 @@
+@model IEnumerable<CorpProcure.Models.Budget>
+@{
+    ViewData["Title"] = "Budget Usage Report";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="card-title mb-1">
+                            <i class="bi bi-pie-chart me-2 text-primary"></i>Budget Usage Report
+                        </h4>
+                        <p class="text-muted small mb-0">Track department spending and budget utilization</p>
+                    </div>
+                </div>
+
+                <!-- Filter Form -->
+                <form asp-action="BudgetReport" method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Fiscal Year</label>
+                        <select name="year" class="form-select" asp-items="ViewBag.Years"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted">Department</label>
+                        <select name="departmentId" class="form-select" asp-items="ViewBag.Departments">
+                            <option value="">-- All Departments --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5 d-flex gap-2 align-items-end justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="material-symbols-outlined align-middle fs-6 me-1">filter_alt</span> View
+                        </button>
+                        <button type="submit" formaction="@Url.Action("ExportBudgetReport")" formmethod="post" class="btn btn-success">
+                            <span class="material-symbols-outlined align-middle fs-6 me-1">download</span> Export
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Department</th>
+                        <th class="text-end">Total Budget</th>
+                        <th class="text-end">Used</th>
+                        <th class="text-end">Reserved</th>
+                        <th class="text-end">Remaining</th>
+                        <th class="text-center">% Usage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No budget records found for selected year.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            var remaining = item.TotalAmount - item.CurrentUsage - item.ReservedAmount;
+                            var usagePercent = item.TotalAmount > 0 ? ((item.CurrentUsage + item.ReservedAmount) / item.TotalAmount) * 100 : 0;
+                            
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@item.Department?.Name</div>
+                                    <div class="small text-muted">@item.Department?.Code</div>
+                                </td>
+                                <td class="text-end fw-bold">@item.TotalAmount.ToString("N0")</td>
+                                <td class="text-end text-danger">@item.CurrentUsage.ToString("N0")</td>
+                                <td class="text-end text-warning">@item.ReservedAmount.ToString("N0")</td>
+                                <td class="text-end text-primary fw-bold">@remaining.ToString("N0")</td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <div class="progress flex-grow-1 me-2" style="height: 6px; width: 80px;">
+                                            <div class="progress-bar @(usagePercent > 90 ? "bg-danger" : (usagePercent > 70 ? "bg-warning" : "bg-success"))" 
+                                                 role="progressbar" 
+                                                 style="width: @(Math.Min(usagePercent, 100))%">
+                                            </div>
+                                        </div>
+                                        <span class="small fw-bold">@usagePercent.ToString("F1")%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

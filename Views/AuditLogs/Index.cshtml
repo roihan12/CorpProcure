@@ -1,0 +1,217 @@
+@model IEnumerable<CorpProcure.Models.AuditLog>
+@using CorpProcure.Models.Enums
+@{
+    ViewData["Title"] = "Audit Logs";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml"; // Ensure this matches user's layout structure, might need to revert if _Layout.cshtml is default or just remove if ViewStart handles it. I'll use default or check later.
+    // User added _AdminLayout in previous steps so likely valid.
+    
+    int currentPage = ViewData["CurrentPage"] as int? ?? 1;
+    int totalPages = ViewData["TotalPages"] as int? ?? 1;
+    long totalItems = ViewData["TotalItems"] as long? ?? 0;
+    bool hasPrevious = ViewData["HasPreviousPage"] as bool? ?? false;
+    bool hasNext = ViewData["HasNextPage"] as bool? ?? false;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="card-title mb-1">
+                            <i class="bi bi-shield-check me-2 text-primary"></i>Audit Log System
+                        </h4>
+                        <p class="text-muted small mb-0">Track all system activities and data changes</p>
+                    </div>
+                </div>
+
+                <!-- Filter Form -->
+                <form asp-action="Index" method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Search (User/ID)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" class="form-control border-start-0" value="@ViewData["Search"]" placeholder="Username, Note..." />
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Type</label>
+                        <select name="type" class="form-select" asp-items="Html.GetEnumSelectList<AuditLogType>()">
+                            <option value="">-- All Types --</option>
+                            @if (ViewData["Type"] != null)
+                            {
+                                <option value="@ViewData["Type"]" selected style="display:none"></option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Table/Module</label>
+                        <select name="tableName" class="form-select" asp-items="ViewBag.TableNames">
+                            <option value="">-- All Tables --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Date Range</label>
+                        <div class="input-group">
+                            <input type="date" name="startDate" class="form-control" value="@ViewData["StartDate"]" placeholder="Start" />
+                            <span class="input-group-text">-</span>
+                            <input type="date" name="endDate" class="form-control" value="@ViewData["EndDate"]" placeholder="End" />
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            Apply Filter
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Timestamp</th>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Module/Table</th>
+                        <th>Details/Notes</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-search display-6 d-block mb-3 opacity-25"></i>
+                                No audit logs found matching your criteria.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 text-nowrap">
+                                    <div class="fw-medium">@item.Timestamp.ToString("MMM dd, yyyy")</div>
+                                    <div class="small text-muted">@item.Timestamp.ToString("HH:mm:ss")</div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle-sm bg-light text-dark me-2 border" style="width:24px;height:24px;font-size:10px;">
+                                            @item.UserName.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <span class="text-dark fw-medium">@item.UserName</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @switch (item.AuditType)
+                                    {
+                                        case AuditLogType.Create:
+                                            <span class="badge bg-success bg-opacity-10 text-success">Create</span>
+                                            break;
+                                        case AuditLogType.Update:
+                                            <span class="badge bg-info bg-opacity-10 text-info">Update</span>
+                                            break;
+                                        case AuditLogType.Delete:
+                                            <span class="badge bg-danger bg-opacity-10 text-danger">Delete</span>
+                                            break;
+                                        case AuditLogType.Login:
+                                            <span class="badge bg-primary bg-opacity-10 text-primary">Login</span>
+                                            break;
+                                        case AuditLogType.LoginFailed:
+                                            <span class="badge bg-warning bg-opacity-10 text-warning">Login Failed</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary">@item.AuditType</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    <span class="font-monospace small text-muted">@item.TableName</span>
+                                    @if (!string.IsNullOrEmpty(item.RecordId))
+                                    {
+                                        <div class="x-small text-muted">ID: @item.RecordId</div>
+                                    }
+                                </td>
+                                <td class="text-break" style="max-width: 300px;">
+                                    @if (!string.IsNullOrEmpty(item.Notes))
+                                    {
+                                        <span>@item.Notes</span>
+                                    }
+                                    else if (!string.IsNullOrEmpty(item.AffectedColumns))
+                                    {
+                                        <span class="text-muted small">Changed: @item.AffectedColumns</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">
+                                        View Changes
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                <div class="small text-muted">
+                    Showing @((currentPage - 1) * 20 + 1) to @(Math.Min(currentPage * 20, totalItems)) of @totalItems entries
+                </div>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(!hasPrevious ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" 
+                               asp-route-page="@(currentPage - 1)"
+                               asp-route-search="@ViewData["Search"]"
+                               asp-route-type="@ViewData["Type"]"
+                               asp-route-tableName="@ViewData["TableName"]"
+                               asp-route-startDate="@ViewData["StartDate"]"
+                               asp-route-endDate="@ViewData["EndDate"]">Previous</a>
+                        </li>
+                        
+                        @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Index" 
+                                   asp-route-page="@i"
+                                   asp-route-search="@ViewData["Search"]"
+                                   asp-route-type="@ViewData["Type"]"
+                                   asp-route-tableName="@ViewData["TableName"]"
+                                   asp-route-startDate="@ViewData["StartDate"]"
+                                   asp-route-endDate="@ViewData["EndDate"]">@i</a>
+                            </li>
+                        }
+                        
+                        <li class="page-item @(!hasNext ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" 
+                               asp-route-page="@(currentPage + 1)"
+                               asp-route-search="@ViewData["Search"]"
+                               asp-route-type="@ViewData["Type"]"
+                               asp-route-tableName="@ViewData["TableName"]"
+                               asp-route-startDate="@ViewData["StartDate"]"
+                               asp-route-endDate="@ViewData["EndDate"]">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,103 @@
+@model CorpProcure.Models.AuditLog
+@{
+    ViewData["Title"] = "Audit Log Details";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex align-items-center mb-4">
+            <a asp-action="Index" class="btn btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+            <h4 class="mb-0">Log Details</h4>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light py-3">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <small class="text-uppercase text-muted fw-bold">Transaction ID</small>
+                        <div class="font-monospace">@Model.Id</div>
+                    </div>
+                    <div class="col-auto">
+                         <span class="badge @(Model.AuditType == CorpProcure.Models.Enums.AuditLogType.Delete ? "bg-danger" : (Model.AuditType == CorpProcure.Models.Enums.AuditLogType.Create ? "bg-success" : "bg-info")) fs-6">
+                            @Model.AuditType
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <label class="small text-muted d-block">Timestamp</label>
+                        <span class="fw-medium">@Model.Timestamp.ToString("f")</span>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="small text-muted d-block">Performed By</label>
+                        <div class="d-flex align-items-center mt-1">
+                            <div class="avatar-circle-sm bg-primary bg-opacity-10 text-primary me-2 rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;">
+                                @Model.UserName.Substring(0, 1).ToUpper()
+                            </div>
+                            <div>
+                                <div class="fw-medium">@Model.UserName</div>
+                                <div class="x-small text-muted">ID: @Model.UserId</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="small text-muted d-block">Module / Table</label>
+                        <span class="fw-medium">@Model.TableName</span>
+                        @if (!string.IsNullOrEmpty(Model.RecordId)) { 
+                            <span class="text-muted ms-1">(Record: @Model.RecordId)</span>
+                        }
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="small text-muted d-block">IP Address</label>
+                        <span>@(Model.IpAddress ?? "-")</span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small text-muted d-block">User Agent</label>
+                        <span class="text-break small">@(Model.UserAgent ?? "-")</span>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="col-12">
+                            <div class="alert alert-light border">
+                                <label class="small text-muted d-block mb-1">Notes</label>
+                                @Model.Notes
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.OldValues) || !string.IsNullOrEmpty(Model.NewValues))
+        {
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0">Changes Breakdown</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-6 border-end">
+                            <div class="p-3 bg-light border-bottom text-danger fw-medium">Old Values</div>
+                            <div class="p-3 bg-light bg-opacity-25 font-monospace small" style="white-space: pre-wrap;">
+                                @(Model.OldValues ?? "null")
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                             <div class="p-3 bg-light border-bottom text-success fw-medium">New Values</div>
+                             <div class="p-3 bg-light bg-opacity-25 font-monospace small" style="white-space: pre-wrap;">
+                                @(Model.NewValues ?? "null")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

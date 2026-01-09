@@ -88,16 +88,16 @@
                 </li>
             }
 
-            <!-- BUDGET SECTION -->
-            @if (User.IsInRole("Manager") || User.IsInRole("Finance") || User.IsInRole("Admin"))
+            <!-- BUDGET SECTION (All roles can view their budget) -->
+            @if (User.IsInRole("Staff") || User.IsInRole("Manager") || User.IsInRole("Finance") || User.IsInRole("Admin"))
             {
                 <li class="menu-title small text-uppercase">
                     <span class="menu-title-text">BUDGET</span>
                 </li>
 
-                <li class="menu-item @(Context.Request.Path.StartsWithSegments("/Budget") ? "open" : "")">
-                    <a asp-controller="Budget" asp-action="Index"
-                       class="menu-link @(Context.Request.Path.StartsWithSegments("/Budget") ? "active" : "")">
+                <li class="menu-item @(Context.Request.Path.StartsWithSegments("/Budgets") ? "open" : "")">
+                    <a asp-controller="Budgets" asp-action="Index"
+                       class="menu-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Budgets" ? "active" : "")">
                         <span class="material-symbols-outlined menu-icon">account_balance_wallet</span>
                         <span class="title">Budget Overview</span>
                     </a>
@@ -161,16 +161,8 @@
                 </li>
 
                 <li class="menu-item">
-                    <a asp-controller="Budget" asp-action="Manage"
-                       class="menu-link @(Context.Request.Path == "/Budget/Manage" ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">monetization_on</span>
-                        <span class="title">Budget Management</span>
-                    </a>
-                </li>
-
-                <li class="menu-item">
-                    <a asp-controller="AuditLog" asp-action="Index"
-                       class="menu-link @(Context.Request.Path.StartsWithSegments("/AuditLog") ? "active" : "")">
+                    <a asp-controller="AuditLogs" asp-action="Index"
+                       class="menu-link @(Context.Request.Path.StartsWithSegments("/AuditLogs") ? "active" : "")">
                         <span class="material-symbols-outlined menu-icon">history</span>
                         <span class="title">Audit Logs</span>
                     </a>

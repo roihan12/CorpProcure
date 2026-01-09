@@ -1,0 +1,150 @@
+@model IEnumerable<CorpProcure.Models.PurchaseRequest>
+@{
+    ViewData["Title"] = "Approval Timeline Report";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    string FormatDuration(TimeSpan? ts)
+    {
+        if (!ts.HasValue) return "-";
+        if (ts.Value.TotalDays >= 1.0) return $"{ts.Value.TotalDays:F1} days";
+        if (ts.Value.TotalHours >= 1.0) return $"{ts.Value.TotalHours:F1} hours";
+        return $"{ts.Value.TotalMinutes:F0} mins";
+    }
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="card-title mb-1">
+                            <i class="bi bi-clock-history me-2 text-primary"></i>Approval Timeline
+                        </h4>
+                        <p class="text-muted small mb-0">Analyze approval efficiency and identify bottlenecks</p>
+                    </div>
+                </div>
+
+                <!-- Filter Form -->
+                <form asp-action="ApprovalReport" method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">From Date (Submitted)</label>
+                        <input type="date" name="startDate" class="form-control" value="@ViewData["StartDate"]" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">To Date</label>
+                        <input type="date" name="endDate" class="form-control" value="@ViewData["EndDate"]" />
+                    </div>
+                    <div class="col-md-6 d-flex gap-2 align-items-end justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="material-symbols-outlined align-middle fs-6 me-1">filter_alt</span> View
+                        </button>
+                        <button type="submit" formaction="@Url.Action("ExportApprovalReport")" formmethod="post" class="btn btn-success">
+                            <span class="material-symbols-outlined align-middle fs-6 me-1">download</span> Export
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead class="bg-light small">
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Submit Date</th>
+                        <th>Manager Appr.</th>
+                        <th>Time (L1)</th>
+                        <th>Finance Appr.</th>
+                        <th>Time (L2)</th>
+                        <th>Total Time</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">No records found.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in Model)
+                        {
+                            var timeToManager = (item.ManagerApprovalDate.HasValue) 
+                                ? (item.ManagerApprovalDate.Value - item.CreatedAt) 
+                                : (TimeSpan?)null;
+                                
+                            var timeToFinance = (item.FinanceApprovalDate.HasValue && item.ManagerApprovalDate.HasValue)
+                                ? (item.FinanceApprovalDate.Value - item.ManagerApprovalDate.Value)
+                                : (TimeSpan?)null;
+                                
+                            var totalTime = (item.FinanceApprovalDate.HasValue)
+                                ? (item.FinanceApprovalDate.Value - item.CreatedAt)
+                                : (TimeSpan?)null;
+
+                            <tr>
+                                <td class="fw-medium">
+                                    <div>@item.RequestNumber</div>
+                                    <div class="text-muted x-small">@item.Status</div>
+                                </td>
+                                <td>@item.CreatedAt.ToString("MMM dd HH:mm")</td>
+                                
+                                <!-- Manager Step -->
+                                <td>
+                                    @if(item.ManagerApprovalDate.HasValue) {
+                                        <span class="text-success">@item.ManagerApprovalDate.Value.ToString("MMM dd HH:mm")</span>
+                                    } else {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if(timeToManager.HasValue) {
+                                        <span class="badge @(timeToManager.Value.TotalDays > 2 ? "bg-warning text-dark" : "bg-light text-dark border")">
+                                            @FormatDuration(timeToManager)
+                                        </span>
+                                    } else {
+                                        <span>-</span>
+                                    }
+                                </td>
+
+                                <!-- Finance Step -->
+                                <td>
+                                    @if(item.FinanceApprovalDate.HasValue) {
+                                        <span class="text-success">@item.FinanceApprovalDate.Value.ToString("MMM dd HH:mm")</span>
+                                    } else {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if(timeToFinance.HasValue) {
+                                        <span class="badge @(timeToFinance.Value.TotalDays > 2 ? "bg-warning text-dark" : "bg-light text-dark border")">
+                                            @FormatDuration(timeToFinance)
+                                        </span>
+                                    } else {
+                                        <span>-</span>
+                                    }
+                                </td>
+
+                                <!-- Total -->
+                                <td>
+                                    @if(totalTime.HasValue) {
+                                        <span class="fw-bold">@FormatDuration(totalTime)</span>
+                                    } else {
+                                        <span class="text-muted">In Progress</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

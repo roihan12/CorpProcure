@@ -1,0 +1,84 @@
+@model CorpProcure.DTOs.Budget.CreateBudgetDto
+@{
+    ViewData["Title"] = "Add Budget";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="main-content-container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Add Budget</h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Dashboard</a></li>
+                <li class="breadcrumb-item"><a asp-action="Index">Budget</a></li>
+                <li class="breadcrumb-item active">Add</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Alert -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="ri-error-warning-line me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Form Card -->
+    <div class="card bg-white border-0 rounded-3">
+        <div class="card-body p-4">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <!-- Department -->
+                    <div class="col-md-6">
+                        <label asp-for="DepartmentId" class="form-label fw-medium">Department <span class="text-danger">*</span></label>
+                        <select asp-for="DepartmentId" asp-items="ViewBag.Departments" class="form-select">
+                            <option value="">-- Select Department --</option>
+                        </select>
+                        <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Year -->
+                    <div class="col-md-3">
+                        <label asp-for="Year" class="form-label fw-medium">Fiscal Year <span class="text-danger">*</span></label>
+                        <input asp-for="Year" class="form-control" type="number" min="2020" max="2100">
+                        <span asp-validation-for="Year" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Total Amount -->
+                    <div class="col-md-3">
+                        <label asp-for="TotalAmount" class="form-label fw-medium">Total Budget <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">Rp</span>
+                            <input asp-for="TotalAmount" class="form-control" type="number" min="0" step="1000"
+                                   placeholder="0">
+                        </div>
+                        <span asp-validation-for="TotalAmount" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="col-12">
+                        <label asp-for="Notes" class="form-label fw-medium">Notes</label>
+                        <textarea asp-for="Notes" class="form-control" rows="3"
+                                  placeholder="Additional notes about this budget allocation..."></textarea>
+                        <span asp-validation-for="Notes" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="ri-save-line me-1"></i> Save
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

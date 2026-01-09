@@ -1,8 +1,10 @@
-﻿using CorpProcure.Models;
+﻿using CorpProcure.Extensions;
+using CorpProcure.Models;
 using CorpProcure.Models.Base;
 using CorpProcure.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace CorpProcure.Data.Interceptors;
@@ -184,13 +186,7 @@ public class AuditInterceptor : SaveChangesInterceptor
 
     private Guid GetCurrentUserId()
     {
-        // TODO: Implement getting current user ID from HTTP context or service
-        // For now, return default GUID
-        // In production, get from:
-        // - _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-        // - atau dari scoped service yang menyimpan current user
-
-        return Guid.Empty; // Replace with actual implementation
+        return _httpContextAccessor?.HttpContext?.User?.GetUserId() ?? Guid.Empty;
     }
 
     private string? GetIpAddress()
