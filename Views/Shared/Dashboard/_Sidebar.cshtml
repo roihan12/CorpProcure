@@ -64,9 +64,9 @@
             <!-- Approvals (Manager & Finance only) -->
             @if (User.IsInRole("Manager") || User.IsInRole("Finance"))
             {
-                <li class="menu-item @(Context.Request.Path == "/PurchasesRequest/PendingApprovals" ? "open" : "")">
-                    <a asp-controller="PurchasesRequest" asp-action="PendingApprovals"
-                       class="menu-link @(Context.Request.Path == "/PurchasesRequest/PendingApprovals" ? "active" : "")">
+                <li class="menu-item @(Context.Request.Path == "/PurchasesRequest/MyApprovals" ? "open" : "")">
+                    <a asp-controller="PurchasesRequest" asp-action="MyApprovals"
+                       class="menu-link @(Context.Request.Path == "/PurchasesRequest/MyApprovals" ? "active" : "")">
                         <span class="material-symbols-outlined menu-icon">task_alt</span>
                         <span class="title">
                             Pending Approvals
@@ -162,7 +162,7 @@
 
                 <li class="menu-item">
                     <a asp-controller="AuditLogs" asp-action="Index"
-                       class="menu-link @(Context.Request.Path.StartsWithSegments("/AuditLogs") ? "active" : "")">
+                       class="menu-link @(Context.Request.Path.StartsWithSegments("/AuditLog") ? "active" : "")">
                         <span class="material-symbols-outlined menu-icon">history</span>
                         <span class="title">Audit Logs</span>
                     </a>

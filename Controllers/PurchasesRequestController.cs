@@ -359,14 +359,22 @@ namespace CorpProcure.Controllers
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
 
+            // Populate ViewData required by Index.cshtml due to pagination logic
+            ViewData["CurrentFilter"] = "";
+            ViewData["CurrentPage"] = 1;
+            ViewData["TotalPages"] = 1; // Since GetDepartmentRequestsAsync returns all, we act as 1 page
+            ViewData["TotalItems"] = requests.Count;
+            ViewData["HasPreviousPage"] = false;
+            ViewData["HasNextPage"] = false;
+
             return View("Index", requests);
         }
 
         // GET: PurchasesRequest/PendingApprovals - alias for MyApprovals
         [Authorize(Roles = "Manager,Finance,Admin")]
-        public Task<IActionResult> PendingApprovals()
+        public IActionResult PendingApprovals()
         {
-            return MyApprovals();
+            return RedirectToAction(nameof(MyApprovals));
         }
     }
 }
