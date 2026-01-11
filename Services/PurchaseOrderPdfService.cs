@@ -37,6 +37,7 @@ public class PurchaseOrderPdfService : IPurchaseOrderPdfService
             .Include(p => p.Items)
             .Include(p => p.ManagerApprover)
             .Include(p => p.FinanceApprover)
+            .Include(p => p.Vendor)
             .FirstOrDefaultAsync(p => p.Id == purchaseRequestId);
 
         if (request == null)
@@ -118,6 +119,90 @@ public class PurchaseOrderPdfService : IPurchaseOrderPdfService
             });
 
             column.Item().PaddingTop(20);
+
+            // Vendor Information Section
+            if (request.Vendor != null)
+            {
+                column.Item().Text("Vendor Information").FontSize(12).Bold().FontColor(Colors.Blue.Darken2);
+                column.Item().PaddingTop(5).LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten2);
+                column.Item().PaddingTop(10);
+
+                column.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(15).Column(vendorCol =>
+                {
+                    vendorCol.Item().Row(vendorRow =>
+                    {
+                        vendorRow.RelativeItem().Column(leftCol =>
+                        {
+                            leftCol.Item().Text(request.Vendor.Name).FontSize(12).Bold();
+                            leftCol.Item().PaddingTop(3).Text($"Code: {request.Vendor.Code}").FontSize(9).FontColor(Colors.Grey.Darken1);
+                            
+                            if (!string.IsNullOrEmpty(request.Vendor.Address))
+                            {
+                                leftCol.Item().PaddingTop(5).Text(request.Vendor.Address).FontSize(9);
+                            }
+                            if (!string.IsNullOrEmpty(request.Vendor.City) || !string.IsNullOrEmpty(request.Vendor.Province))
+                            {
+                                leftCol.Item().Text($"{request.Vendor.City}, {request.Vendor.Province} {request.Vendor.PostalCode}".Trim()).FontSize(9);
+                            }
+                        });
+
+                        vendorRow.RelativeItem().Column(rightCol =>
+                        {
+                            if (!string.IsNullOrEmpty(request.Vendor.ContactPerson))
+                            {
+                                rightCol.Item().Text("Contact:").FontSize(8).FontColor(Colors.Grey.Darken1);
+                                rightCol.Item().Text(request.Vendor.ContactPerson).FontSize(9);
+                            }
+                            if (!string.IsNullOrEmpty(request.Vendor.Phone))
+                            {
+                                rightCol.Item().PaddingTop(3).Text($"Phone: {request.Vendor.Phone}").FontSize(9);
+                            }
+                            if (!string.IsNullOrEmpty(request.Vendor.Email))
+                            {
+                                rightCol.Item().Text($"Email: {request.Vendor.Email}").FontSize(9);
+                            }
+                            if (!string.IsNullOrEmpty(request.Vendor.TaxId))
+                            {
+                                rightCol.Item().PaddingTop(5).Text($"NPWP: {request.Vendor.TaxId}").FontSize(9);
+                            }
+                        });
+                    });
+
+                    // Payment Terms
+                    vendorCol.Item().PaddingTop(10).Row(paymentRow =>
+                    {
+                        paymentRow.RelativeItem().Column(ptCol =>
+                        {
+                            ptCol.Item().Text("Payment Terms:").FontSize(8).FontColor(Colors.Grey.Darken1);
+                            var paymentTermText = request.Vendor.PaymentTerms switch
+                            {
+                                Models.Enums.PaymentTermType.Immediate => "Immediate",
+                                Models.Enums.PaymentTermType.Net15 => "Net 15 Days",
+                                Models.Enums.PaymentTermType.Net30 => "Net 30 Days",
+                                Models.Enums.PaymentTermType.Net45 => "Net 45 Days",
+                                Models.Enums.PaymentTermType.Net60 => "Net 60 Days",
+                                _ => request.Vendor.PaymentTerms.ToString()
+                            };
+                            ptCol.Item().Text(paymentTermText).FontSize(9).Bold();
+                        });
+
+                        if (!string.IsNullOrEmpty(request.Vendor.BankName))
+                        {
+                            paymentRow.RelativeItem().Column(bankCol =>
+                            {
+                                bankCol.Item().Text("Bank Account:").FontSize(8).FontColor(Colors.Grey.Darken1);
+                                bankCol.Item().Text($"{request.Vendor.BankName} - {request.Vendor.AccountNumber}").FontSize(9);
+                                if (!string.IsNullOrEmpty(request.Vendor.AccountHolderName))
+                                {
+                                    bankCol.Item().Text($"a/n {request.Vendor.AccountHolderName}").FontSize(8).FontColor(Colors.Grey.Darken1);
+                                }
+                            });
+                        }
+                    });
+                });
+
+                column.Item().PaddingTop(20);
+            }
 
             // Request Details Section
             column.Item().Text("Request Information").FontSize(12).Bold().FontColor(Colors.Blue.Darken2);

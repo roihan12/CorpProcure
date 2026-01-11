@@ -159,6 +159,16 @@ public class PurchaseRequest : AuditableEntity
     [MaxLength(500)]
     public string? PoFilePath { get; set; }
 
+    /// <summary>
+    /// ID Vendor yang dipilih untuk PO (opsional saat PR, wajib saat generate PO)
+    /// </summary>
+    public Guid? VendorId { get; set; }
+
+    /// <summary>
+    /// Navigation property ke Vendor
+    /// </summary>
+    public Vendor? Vendor { get; set; }
+
     // Navigation Properties
 
     /// <summary>

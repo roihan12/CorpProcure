@@ -153,3 +153,81 @@ public enum AuditLogType
     /// </summary>
     Logout = 12
 }
+
+/// <summary>
+/// Kategori vendor berdasarkan jenis layanan/produk
+/// </summary>
+public enum VendorCategory
+{
+    /// <summary>
+    /// Vendor barang fisik
+    /// </summary>
+    Goods = 1,
+
+    /// <summary>
+    /// Vendor jasa/layanan
+    /// </summary>
+    Services = 2,
+
+    /// <summary>
+    /// Vendor barang dan jasa
+    /// </summary>
+    Both = 3
+}
+
+/// <summary>
+/// Status vendor dalam sistem
+/// </summary>
+public enum VendorStatus
+{
+    /// <summary>
+    /// Vendor baru, menunggu review/approval
+    /// </summary>
+    PendingReview = 0,
+
+    /// <summary>
+    /// Vendor aktif, dapat menerima PO
+    /// </summary>
+    Active = 1,
+
+    /// <summary>
+    /// Vendor tidak aktif sementara
+    /// </summary>
+    Inactive = 2,
+
+    /// <summary>
+    /// Vendor diblokir, tidak dapat menerima PO
+    /// </summary>
+    Blacklisted = 3
+}
+
+/// <summary>
+/// Tipe syarat pembayaran vendor
+/// </summary>
+public enum PaymentTermType
+{
+    /// <summary>
+    /// Pembayaran segera saat pengiriman
+    /// </summary>
+    Immediate = 0,
+
+    /// <summary>
+    /// Pembayaran dalam 15 hari
+    /// </summary>
+    Net15 = 15,
+
+    /// <summary>
+    /// Pembayaran dalam 30 hari (paling umum)
+    /// </summary>
+    Net30 = 30,
+
+    /// <summary>
+    /// Pembayaran dalam 45 hari
+    /// </summary>
+    Net45 = 45,
+
+    /// <summary>
+    /// Pembayaran dalam 60 hari
+    /// </summary>
+    Net60 = 60
+}

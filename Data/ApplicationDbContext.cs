@@ -34,6 +34,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     public DbSet<RequestItem> RequestItems { get; set; }
     public DbSet<ApprovalHistory> ApprovalHistories { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<Vendor> Vendors { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -59,6 +60,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
         modelBuilder.Entity<PurchaseRequest>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<RequestItem>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<ApprovalHistory>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Vendor>().HasQueryFilter(e => !e.IsDeleted);
         // AuditLog tidak perlu soft delete filter - kita ingin bisa query semua audit logs
 
         // Configure relationships dan constraints
@@ -69,6 +71,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
         ConfigureRequestItemEntity(modelBuilder);
         ConfigureApprovalHistoryEntity(modelBuilder);
         ConfigureAuditLogEntity(modelBuilder);
+        ConfigureVendorEntity(modelBuilder);
     }
 
     private void ConfigureUserEntity(ModelBuilder modelBuilder)
@@ -166,6 +169,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 .WithMany()
                 .HasForeignKey(e => e.RejectedById)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Vendor)
+                .WithMany(v => v.PurchaseRequests)
+                .HasForeignKey(e => e.VendorId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 
@@ -228,6 +236,23 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
 
             // No relationships to avoid circular dependencies
             // AuditLog is standalone for audit purposes
+        });
+    }
+
+    private void ConfigureVendorEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Vendor>(entity =>
+        {
+            // Indexes
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => e.TaxId);
+
+            // Decimal precision
+            entity.Property(e => e.CreditLimit).HasPrecision(18, 2);
+            entity.Property(e => e.TotalOrderValue).HasPrecision(18, 2);
         });
     }
 

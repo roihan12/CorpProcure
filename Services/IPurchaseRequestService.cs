@@ -62,7 +62,7 @@ namespace CorpProcure.Services
         /// <summary>
         /// Generate PO from approved request
         /// </summary>
-        Task<Result<string>> GeneratePurchaseOrderAsync(Guid requestId, Guid userId);
+        Task<Result<string>> GeneratePurchaseOrderAsync(Guid requestId, Guid vendorId, Guid userId);
     }
 
 }

@@ -136,37 +136,47 @@
                 </li>
             }
 
-            <!-- MASTER DATA (Admin only) -->
-            @if (User.IsInRole("Admin"))
+            <!-- MASTER DATA (Admin and Finance) -->
+            @if (User.IsInRole("Admin") || User.IsInRole("Finance"))
             {
                 <li class="menu-title small text-uppercase">
                     <span class="menu-title-text">MASTER DATA</span>
                 </li>
 
-
                 <li class="menu-item">
-                    <a asp-controller="Departments" asp-action="Index"
-                       class="menu-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Department" ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">corporate_fare</span>
-                        <span class="title">Departments</span>
+                    <a asp-controller="Vendors" asp-action="Index"
+                       class="menu-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Vendors" ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">business</span>
+                        <span class="title">Vendors</span>
                     </a>
                 </li>
 
-                <li class="menu-item">
-                    <a asp-controller="UserManagement" asp-action="Index"
-                       class="menu-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">group</span>
-                        <span class="title">Users</span>
-                    </a>
-                </li>
+                @if (User.IsInRole("Admin"))
+                {
+                    <li class="menu-item">
+                        <a asp-controller="Departments" asp-action="Index"
+                           class="menu-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Departments" ? "active" : "")">
+                            <span class="material-symbols-outlined menu-icon">corporate_fare</span>
+                            <span class="title">Departments</span>
+                        </a>
+                    </li>
 
-                <li class="menu-item">
-                    <a asp-controller="AuditLogs" asp-action="Index"
-                       class="menu-link @(Context.Request.Path.StartsWithSegments("/AuditLog") ? "active" : "")">
-                        <span class="material-symbols-outlined menu-icon">history</span>
-                        <span class="title">Audit Logs</span>
-                    </a>
-                </li>
+                    <li class="menu-item">
+                        <a asp-controller="UserManagement" asp-action="Index"
+                           class="menu-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" ? "active" : "")">
+                            <span class="material-symbols-outlined menu-icon">group</span>
+                            <span class="title">Users</span>
+                        </a>
+                    </li>
+
+                    <li class="menu-item">
+                        <a asp-controller="AuditLogs" asp-action="Index"
+                           class="menu-link @(Context.Request.Path.StartsWithSegments("/AuditLog") ? "active" : "")">
+                            <span class="material-symbols-outlined menu-icon">history</span>
+                            <span class="title">Audit Logs</span>
+                        </a>
+                    </li>
+                }
             }
 
             <!-- PROFILE & SETTINGS -->

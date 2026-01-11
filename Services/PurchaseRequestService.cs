@@ -543,7 +543,7 @@ public class PurchaseRequestService : IPurchaseRequestService
         }
     }
 
-    public async Task<Result<string>> GeneratePurchaseOrderAsync(Guid requestId, Guid userId)
+    public async Task<Result<string>> GeneratePurchaseOrderAsync(Guid requestId, Guid vendorId, Guid userId)
     {
         try
         {
@@ -558,6 +558,24 @@ public class PurchaseRequestService : IPurchaseRequestService
             if (!string.IsNullOrEmpty(pr.PoNumber))
                 return Result<string>.Fail("PO already generated");
 
+            // Validate vendor
+            var vendor = await _context.Vendors.FindAsync(vendorId);
+            if (vendor == null)
+                return Result<string>.Fail("Vendor not found");
+
+            if (vendor.Status == Models.Enums.VendorStatus.Blacklisted)
+                return Result<string>.Fail($"Cannot create PO for blacklisted vendor: {vendor.Name}");
+
+            if (vendor.Status != Models.Enums.VendorStatus.Active)
+                return Result<string>.Fail($"Vendor '{vendor.Name}' is not active. Current status: {vendor.Status}");
+
+            // Assign vendor to PR
+            pr.VendorId = vendorId;
+
+            // Update vendor stats
+            vendor.TotalOrders++;
+            vendor.TotalOrderValue += pr.TotalAmount;
+
             // Generate PO number
             var poNumber = await _numberGenerator.GeneratePurchaseOrderNumberAsync();
             pr.PoNumber = poNumber;
@@ -566,8 +584,8 @@ public class PurchaseRequestService : IPurchaseRequestService
             await _context.SaveChangesAsync();
 
             _logger.LogInformation(
-                "PO {PoNumber} generated for purchase request {RequestId}",
-                poNumber, requestId);
+                "PO {PoNumber} generated for purchase request {RequestId} with vendor {VendorId}",
+                poNumber, requestId, vendorId);
 
             return Result<string>.Ok(poNumber);
         }

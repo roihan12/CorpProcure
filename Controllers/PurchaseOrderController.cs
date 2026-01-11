@@ -3,6 +3,7 @@ using CorpProcure.Models.Enums;
 using CorpProcure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -17,15 +18,18 @@ namespace CorpProcure.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IPurchaseRequestService _purchaseRequestService;
         private readonly IPurchaseOrderPdfService _pdfService;
+        private readonly IVendorService _vendorService;
 
         public PurchaseOrderController(
             ApplicationDbContext context,
             IPurchaseRequestService purchaseRequestService,
-            IPurchaseOrderPdfService pdfService)
+            IPurchaseOrderPdfService pdfService,
+            IVendorService vendorService)
         {
             _context = context;
             _purchaseRequestService = purchaseRequestService;
             _pdfService = pdfService;
+            _vendorService = vendorService;
         }
 
         // GET: PurchaseOrder
@@ -36,6 +40,7 @@ namespace CorpProcure.Controllers
                 .Include(p => p.Requester)
                 .Include(p => p.Department)
                 .Include(p => p.Items)
+                .Include(p => p.Vendor)
                 .Where(p => p.Status == RequestStatus.Approved)
                 .AsQueryable();
 
@@ -72,6 +77,7 @@ namespace CorpProcure.Controllers
                 .Include(p => p.Items)
                 .Include(p => p.ManagerApprover)
                 .Include(p => p.FinanceApprover)
+                .Include(p => p.Vendor)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (request == null)
@@ -85,17 +91,26 @@ namespace CorpProcure.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Load vendor dropdown (only active vendors)
+            await LoadVendorDropdownAsync(request.VendorId);
+
             return View(request);
         }
 
         // POST: PurchaseOrder/GenerateConfirmed
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> GenerateConfirmed(Guid id)
+        public async Task<IActionResult> GenerateConfirmed(Guid id, Guid vendorId)
         {
+            if (vendorId == Guid.Empty)
+            {
+                TempData["Error"] = "Please select a vendor before generating PO.";
+                return RedirectToAction(nameof(Generate), new { id });
+            }
+
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var result = await _purchaseRequestService.GeneratePurchaseOrderAsync(id, userId);
+            var result = await _purchaseRequestService.GeneratePurchaseOrderAsync(id, vendorId, userId);
 
             if (!result.Success)
             {
@@ -105,6 +120,21 @@ namespace CorpProcure.Controllers
 
             TempData["Success"] = $"Purchase Order {result.Data} generated successfully.";
             return RedirectToAction(nameof(Details), new { id });
+        }
+
+        private async Task LoadVendorDropdownAsync(Guid? selectedVendorId = null)
+        {
+            var vendorResult = await _vendorService.GetForDropdownAsync(excludeBlacklisted: true);
+            if (vendorResult.Success)
+            {
+                ViewBag.Vendors = new SelectList(
+                    vendorResult.Data!.Select(v => new { v.Id, Display = $"{v.Code} - {v.Name}" }),
+                    "Id", "Display", selectedVendorId);
+            }
+            else
+            {
+                ViewBag.Vendors = new SelectList(Enumerable.Empty<SelectListItem>());
+            }
         }
 
         // GET: PurchaseOrder/Details/5

@@ -116,6 +116,22 @@
                 <form asp-action="GenerateConfirmed" method="post">
                     <input type="hidden" name="id" value="@Model.Id" />
                     
+                    <!-- Vendor Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Select Vendor <span class="text-danger">*</span></label>
+                        <select name="vendorId" class="form-select form-select-lg" required>
+                            <option value="">-- Select Vendor --</option>
+                            @if (ViewBag.Vendors != null)
+                            {
+                                foreach (var item in (Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.Vendors)
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            }
+                        </select>
+                        <small class="text-muted">Only active vendors can be selected. Blacklisted vendors are excluded.</small>
+                    </div>
+                    
                     <div class="alert alert-info bg-info bg-opacity-10 border-0 p-3">
                         <div class="d-flex">
                             <div class="flex-shrink-0">
@@ -125,7 +141,9 @@
                                 <p class="mb-0">Generating PO will:</p>
                                 <ul class="mb-0 mt-2">
                                     <li>Create a new PO number (format: PO-YYYY-NNNN)</li>
+                                    <li>Assign the selected vendor to this order</li>
                                     <li>Generate a PDF document for the Purchase Order</li>
+                                    <li>Update vendor order statistics</li>
                                 </ul>
                             </div>
                         </div>

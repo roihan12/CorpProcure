@@ -273,20 +273,10 @@ namespace CorpProcure.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Procurement,Finance,Admin")]
-        public async Task<IActionResult> GeneratePOConfirmed(Guid id)
+        public IActionResult GeneratePOConfirmed(Guid id)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-            var result = await _purchaseRequestService.GeneratePurchaseOrderAsync(id, userId);
-
-            if (!result.Success)
-            {
-                TempData["Error"] = result.ErrorMessage;
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            TempData["Success"] = $"Purchase Order {result.Data} generated successfully.";
-            return RedirectToAction(nameof(GeneratePO), new { id });
+            // Redirect to PurchaseOrderController which has vendor selection
+            return RedirectToAction("Generate", "PurchaseOrder", new { id });
         }
 
         // GET: PurchasesRequest/DownloadPO/5

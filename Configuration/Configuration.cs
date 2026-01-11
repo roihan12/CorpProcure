@@ -122,6 +122,9 @@ public static class IdentityConfiguration
         // Add User Management service
         services.AddScoped<IUserManagementService, UserManagementService>();
 
+        // Add Vendor Management service
+        services.AddScoped<IVendorService, VendorService>();
+
         return services;
     }
 

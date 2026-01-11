@@ -1,0 +1,259 @@
+@model List<CorpProcure.DTOs.Vendor.VendorListDto>
+@using CorpProcure.Models.Enums
+@{
+    ViewData["Title"] = "Vendors";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    
+    int currentPage = (int)(ViewData["CurrentPage"] ?? 1);
+    int totalPages = (int)(ViewData["TotalPages"] ?? 1);
+    int totalItems = (int)(ViewData["TotalItems"] ?? 0);
+    bool hasPreviousPage = (bool)(ViewData["HasPreviousPage"] ?? false);
+    bool hasNextPage = (bool)(ViewData["HasNextPage"] ?? false);
+    string searchTerm = (string?)ViewData["SearchTerm"] ?? "";
+    var statusFilter = (VendorStatus?)ViewData["StatusFilter"];
+    var categoryFilter = (VendorCategory?)ViewData["CategoryFilter"];
+}
+
+<div class="main-content-container overflow-hidden">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Vendor Management</h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Vendors</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="ri-checkbox-circle-line me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ri-error-warning-line me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Card -->
+    <div class="card bg-white border-0 rounded-3 mb-4">
+        <div class="card-body p-0">
+            <!-- Toolbar -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-4">
+                <form asp-action="Index" method="get" class="d-flex gap-2 flex-wrap align-items-center">
+                    <div class="position-relative table-src-form">
+                        <input type="text" name="searchTerm" class="form-control ps-5"
+                               placeholder="Search vendors..." value="@searchTerm">
+                        <button type="submit" class="border-0 bg-transparent position-absolute top-50 start-0 translate-middle-y ms-3">
+                            <i class="material-symbols-outlined">search</i>
+                        </button>
+                    </div>
+                    <select name="status" class="form-select" style="width: auto;">
+                        <option value="">All Status</option>
+                        @foreach (VendorStatus s in Enum.GetValues<VendorStatus>())
+                        {
+                            var text = s switch { VendorStatus.PendingReview => "Pending Review", VendorStatus.Active => "Aktif", VendorStatus.Inactive => "Tidak Aktif", VendorStatus.Blacklisted => "Blacklist", _ => s.ToString() };
+                            if (statusFilter == s)
+                            {
+                                <option value="@((int)s)" selected>@text</option>
+                            }
+                            else
+                            {
+                                <option value="@((int)s)">@text</option>
+                            }
+                        }
+                    </select>
+                    <select name="category" class="form-select" style="width: auto;">
+                        <option value="">All Category</option>
+                        @foreach (VendorCategory c in Enum.GetValues<VendorCategory>())
+                        {
+                            var text = c switch { VendorCategory.Goods => "Barang", VendorCategory.Services => "Jasa", VendorCategory.Both => "Barang & Jasa", _ => c.ToString() };
+                            if (categoryFilter == c)
+                            {
+                                <option value="@((int)c)" selected>@text</option>
+                            }
+                            else
+                            {
+                                <option value="@((int)c)">@text</option>
+                            }
+                        }
+                    </select>
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="ri-filter-line me-1"></i>Filter
+                    </button>
+                </form>
+
+                <a asp-action="Create" class="btn btn-primary py-2 px-4 fs-14 fw-medium rounded-3">
+                    <i class="ri-add-line me-1"></i> Add Vendor
+                </a>
+            </div>
+
+            <!-- Table -->
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info m-4">
+                    <i class="ri-information-line me-2"></i> No vendors found.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Code</th>
+                                <th>Vendor</th>
+                                <th>Category</th>
+                                <th>Contact</th>
+                                <th>Payment</th>
+                                <th class="text-center">Rating</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td><span class="badge bg-primary">@item.Code</span></td>
+                                    <td>
+                                        <div class="fw-medium">@item.Name</div>
+                                        @if (!string.IsNullOrEmpty(item.City))
+                                        {
+                                            <small class="text-muted">@item.City</small>
+                                        }
+                                    </td>
+                                    <td>@item.CategoryDisplay</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(item.ContactPerson))
+                                        {
+                                            <div>@item.ContactPerson</div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(item.Phone))
+                                        {
+                                            <small class="text-muted">@item.Phone</small>
+                                        }
+                                    </td>
+                                    <td>@item.PaymentTermsDisplay</td>
+                                    <td class="text-center">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= item.Rating)
+                                            {
+                                                <i class="ri-star-fill text-warning"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="ri-star-line text-muted"></i>
+                                            }
+                                        }
+                                    </td>
+                                    <td><span class="badge @item.StatusBadgeClass">@item.StatusDisplay</span></td>
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a asp-action="Details" asp-route-id="@item.Id"
+                                               class="btn btn-sm btn-outline-primary" title="Details">
+                                                <i class="ri-eye-line"></i>
+                                            </a>
+                                            <a asp-action="Edit" asp-route-id="@item.Id"
+                                               class="btn btn-sm btn-outline-warning" title="Edit">
+                                                <i class="ri-edit-line"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#deleteModal-@item.Id"
+                                                    title="Delete">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        </div>
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade" id="deleteModal-@item.Id" tabindex="-1">
+                                            <div class="modal-dialog modal-dialog-centered">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Confirm Delete</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body text-start">
+                                                        <p>Are you sure you want to delete vendor <strong>@item.Name</strong>?</p>
+                                                        @if (item.TotalOrders > 0)
+                                                        {
+                                                            <div class="alert alert-warning py-2">
+                                                                <i class="ri-alert-line me-1"></i>
+                                                                This vendor has <strong>@item.TotalOrders</strong> orders.
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post">
+                                                            @Html.AntiForgeryToken()
+                                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center p-4 mt-3">
+                    <div class="text-muted fs-13">
+                        Showing @(((int)currentPage - 1) * 10 + 1)-@Math.Min(totalItems, currentPage * 10)
+                        of @totalItems vendors
+                    </div>
+
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination pagination-light mb-0">
+                            <li class="page-item @(!hasPreviousPage ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index"
+                                   asp-route-page="@(currentPage - 1)"
+                                   asp-route-searchTerm="@searchTerm"
+                                   asp-route-status="@((int?)statusFilter)"
+                                   asp-route-category="@((int?)categoryFilter)">
+                                    <i class="ri-arrow-left-s-line align-middle"></i>
+                                </a>
+                            </li>
+                            @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index" asp-route-page="@i"
+                                       asp-route-searchTerm="@searchTerm"
+                                       asp-route-status="@((int?)statusFilter)"
+                                       asp-route-category="@((int?)categoryFilter)">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(!hasNextPage ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index"
+                                   asp-route-page="@(currentPage + 1)"
+                                   asp-route-searchTerm="@searchTerm"
+                                   asp-route-status="@((int?)statusFilter)"
+                                   asp-route-category="@((int?)categoryFilter)">
+                                    <i class="ri-arrow-right-s-line align-middle"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        </div>
+    </div>
+</div>
