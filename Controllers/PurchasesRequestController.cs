@@ -101,8 +101,11 @@ namespace CorpProcure.Controllers
 
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+            // Determine if user clicked "Submit Request" or "Save as Draft"
+            bool submitNow = action == "submit";
+
             // Use service to create purchase request
-            var result = await _purchaseRequestService.CreateAsync(dto, userId);
+            var result = await _purchaseRequestService.CreateAsync(dto, userId, submitNow);
 
             if (!result.Success)
             {
@@ -110,9 +113,9 @@ namespace CorpProcure.Controllers
                 return View(dto);
             }
 
-            TempData["Success"] = action == "submit"
+            TempData["Success"] = submitNow
                 ? "Purchase request submitted successfully and awaiting manager approval."
-                : "Purchase request saved as draft.";
+                : "Purchase request saved as draft. You can edit and submit it later.";
 
             return RedirectToAction(nameof(Details), new { id = result.Data });
         }
@@ -128,6 +131,111 @@ namespace CorpProcure.Controllers
             }
 
             return View(result.Data);
+        }
+
+        // POST: PurchasesRequest/Submit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Submit(Guid id)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _purchaseRequestService.SubmitAsync(id, userId);
+
+            if (!result.Success)
+            {
+                TempData["Error"] = result.ErrorMessage;
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            TempData["Success"] = "Purchase request submitted successfully and awaiting manager approval.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // GET: PurchasesRequest/Edit/5
+        public async Task<IActionResult> Edit(Guid id)
+        {
+            var result = await _purchaseRequestService.GetByIdAsync(id);
+
+            if (!result.Success)
+            {
+                return NotFound();
+            }
+
+            var pr = result.Data!;
+
+            // Only allow edit for Draft status
+            if (pr.Status != RequestStatus.Draft)
+            {
+                TempData["Error"] = "Only draft requests can be edited.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Check ownership
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (pr.RequesterId != userId)
+            {
+                TempData["Error"] = "You can only edit your own requests.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Map to UpdateDto
+            var dto = new UpdatePurchaseRequestDto
+            {
+                Id = pr.Id,
+                Description = pr.Description,
+                Justification = pr.Justification ?? pr.Description,
+                Items = pr.Items.Select(i => new RequestItemDto
+                {
+                    ItemId = null, // We don't have ItemId in the detail response
+                    ItemName = i.ItemName,
+                    Description = i.Description,
+                    Quantity = i.Quantity,
+                    Unit = i.Unit ?? "pcs",
+                    UnitPrice = i.UnitPrice
+                }).ToList()
+            };
+
+            return View(dto);
+        }
+
+        // POST: PurchasesRequest/Edit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(UpdatePurchaseRequestDto dto, string action)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(dto);
+            }
+
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            // Update the request
+            var result = await _purchaseRequestService.UpdateAsync(dto, userId);
+
+            if (!result.Success)
+            {
+                TempData["Error"] = result.ErrorMessage;
+                return View(dto);
+            }
+
+            // If user clicked "Save & Submit", submit the request
+            if (action == "submit")
+            {
+                var submitResult = await _purchaseRequestService.SubmitAsync(dto.Id, userId);
+                if (!submitResult.Success)
+                {
+                    TempData["Error"] = submitResult.ErrorMessage;
+                    return RedirectToAction(nameof(Details), new { id = dto.Id });
+                }
+                TempData["Success"] = "Purchase request updated and submitted for approval.";
+            }
+            else
+            {
+                TempData["Success"] = "Purchase request updated successfully.";
+            }
+
+            return RedirectToAction(nameof(Details), new { id = dto.Id });
         }
 
         // GET: PurchasesRequest/Approve/5
@@ -379,5 +487,110 @@ namespace CorpProcure.Controllers
         {
             return RedirectToAction(nameof(MyApprovals));
         }
+
+        #region Attachment Actions
+
+        // GET: PurchasesRequest/GetAttachments/5
+        [HttpGet]
+        public async Task<IActionResult> GetAttachments(Guid id)
+        {
+            var fileUploadService = HttpContext.RequestServices.GetRequiredService<IFileUploadService>();
+            var result = await fileUploadService.GetByPurchaseRequestIdAsync(id);
+
+            if (!result.Success)
+            {
+                return Json(new { success = false, message = result.ErrorMessage });
+            }
+
+            var attachments = result.Data!.Select(a => new
+            {
+                a.Id,
+                a.OriginalFileName,
+                a.ContentType,
+                a.FileSizeFormatted,
+                a.Type,
+                TypeDisplay = a.Type.ToString(),
+                a.Description,
+                CreatedAt = a.CreatedAt.ToString("dd MMM yyyy HH:mm"),
+                DownloadUrl = Url.Action("DownloadAttachment", "PurchasesRequest", new { id = a.Id })
+            });
+
+            return Json(new { success = true, data = attachments });
+        }
+
+        // POST: PurchasesRequest/UploadAttachment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadAttachment(Guid purchaseRequestId, IFormFile file, AttachmentType type, string? description)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return Json(new { success = false, message = "No file uploaded" });
+            }
+
+            var fileUploadService = HttpContext.RequestServices.GetRequiredService<IFileUploadService>();
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            
+            var result = await fileUploadService.UploadAsync(file, purchaseRequestId, type, description, userId);
+
+            if (!result.Success)
+            {
+                return Json(new { success = false, message = result.ErrorMessage });
+            }
+
+            return Json(new { 
+                success = true, 
+                attachment = new
+                {
+                    result.Data!.Id,
+                    result.Data.OriginalFileName,
+                    result.Data.FileSizeFormatted
+                }
+            });
+        }
+
+        // POST: PurchasesRequest/DeleteAttachment/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAttachment(Guid id)
+        {
+            var fileUploadService = HttpContext.RequestServices.GetRequiredService<IFileUploadService>();
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            
+            var result = await fileUploadService.DeleteAsync(id, userId);
+
+            if (!result.Success)
+            {
+                return Json(new { success = false, message = result.ErrorMessage });
+            }
+
+            return Json(new { success = true });
+        }
+
+        // GET: PurchasesRequest/DownloadAttachment/5
+        public async Task<IActionResult> DownloadAttachment(Guid id)
+        {
+            var fileUploadService = HttpContext.RequestServices.GetRequiredService<IFileUploadService>();
+            var result = await fileUploadService.GetByIdAsync(id);
+
+            if (!result.Success)
+            {
+                return NotFound();
+            }
+
+            var attachment = result.Data!;
+            var webHostEnvironment = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
+            var fullPath = Path.Combine(webHostEnvironment.WebRootPath, attachment.FilePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+            if (!System.IO.File.Exists(fullPath))
+            {
+                return NotFound();
+            }
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
+            return File(fileBytes, attachment.ContentType, attachment.OriginalFileName);
+        }
+
+        #endregion
     }
 }

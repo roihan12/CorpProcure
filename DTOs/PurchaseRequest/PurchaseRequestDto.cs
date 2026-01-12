@@ -77,6 +77,8 @@ public class RequestItemDetailDto
 
     public int Quantity { get; set; }
 
+    public string Unit { get; set; } = "pcs";
+
     public decimal UnitPrice { get; set; }
 
     public decimal TotalPrice => Quantity * UnitPrice;

@@ -1,0 +1,478 @@
+@using CorpProcure.DTOs.PurchaseRequest
+@model UpdatePurchaseRequestDto
+@{
+    ViewData["Title"] = "Edit Purchase Request";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Edit Purchase Request</h3>
+
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="PurchasesRequest" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <span class="text-secondary fw-medium hover">Purchase Requests</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Edit</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <form asp-action="Edit" method="post" id="editForm">
+        <input type="hidden" asp-for="Id" />
+        <div class="row">
+            <div class="col-xxl-8 col-lg-7">
+                <div class="card bg-white border-0 rounded-3 mb-4">
+                    <div class="card-body p-4">
+                        <h3 class="mb-lg-4 mb-3">Request Information</h3>
+                        
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="form-group mb-4">
+                                    <label asp-for="Description" class="label text-secondary">Description <span class="text-danger">*</span></label>
+                                    <input asp-for="Description" class="form-control h-55" placeholder="Brief description of the purchase request" required />
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="form-group mb-4">
+                                    <label asp-for="Justification" class="label text-secondary">Justification <span class="text-danger">*</span></label>
+                                    <textarea asp-for="Justification" class="form-control" rows="4" placeholder="Why is this purchase needed? Explain the business justification..." required></textarea>
+                                    <span asp-validation-for="Justification" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Items Section -->
+                <div class="card bg-white border-0 rounded-3 mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="mb-0">Request Items</h3>
+                            <button type="button" id="addItemBtn" class="btn btn-outline-primary btn-sm">
+                                <i class="ri-add-line me-1"></i> Add Item
+                            </button>
+                        </div>
+                        
+                        <div id="itemsContainer">
+                            @for (int i = 0; i < Model.Items.Count; i++)
+                            {
+                                <div class="item-row border rounded-3 p-3 mb-3" data-index="@i">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="mb-0">Item #@(i + 1)</h6>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="form-check form-switch mb-0">
+                                                <input class="form-check-input catalog-checkbox" type="checkbox" id="catalogSwitch@(i)">
+                                                <label class="form-check-label small" for="catalogSwitch@(i)">From Catalog</label>
+                                            </div>
+                                            <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" style="@(Model.Items.Count <= 1 ? "display: none;" : "")">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="Items[@i].ItemId" class="item-id" value="@Model.Items[i].ItemId" />
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="label text-secondary">Item Name <span class="text-danger">*</span></label>
+                                                
+                                                <!-- Custom Input -->
+                                                <input type="text" name="Items[@i].ItemName" class="form-control item-name-input" 
+                                                       placeholder="e.g., Laptop Dell XPS 15" value="@Model.Items[i].ItemName" required />
+                                                
+                                                <!-- Catalog Select -->
+                                                <select class="form-select item-select" style="display:none;">
+                                                    <option value="">-- Loading --</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label class="label text-secondary">Description</label>
+                                                <input type="text" name="Items[@i].Description" class="form-control item-desc" 
+                                                       placeholder="Specifications or details" value="@Model.Items[i].Description" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-3">
+                                                <label class="label text-secondary">Quantity <span class="text-danger">*</span></label>
+                                                <input type="number" name="Items[@i].Quantity" class="form-control item-quantity" 
+                                                       min="1" value="@Model.Items[i].Quantity" required />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-3">
+                                                <label class="label text-secondary">Unit</label>
+                                                @{
+                                                    var currentUnit = Model.Items[i].Unit?.ToLower() ?? "pcs";
+                                                }
+                                                <select name="Items[@i].Unit" class="form-select item-unit" data-value="@currentUnit">
+                                                    <option value="pcs">Pcs</option>
+                                                    <option value="unit">Unit</option>
+                                                    <option value="box">Box</option>
+                                                    <option value="set">Set</option>
+                                                    <option value="pack">Pack</option>
+                                                    <option value="kg">Kg</option>
+                                                    <option value="ltr">Ltr</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-3">
+                                                <label class="label text-secondary">Unit Price (Rp) <span class="text-danger">*</span></label>
+                                                <input type="number" name="Items[@i].UnitPrice" class="form-control item-price" 
+                                                       min="0" step="1000" value="@Model.Items[i].UnitPrice" required />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-3">
+                                                <label class="label text-secondary">Subtotal</label>
+                                                <input type="text" class="form-control item-subtotal" readonly value="Rp 0" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        
+                        <div class="border-top pt-3 mt-3">
+                            <div class="d-flex justify-content-end">
+                                <div class="text-end">
+                                    <span class="text-muted">Total Amount:</span>
+                                    <h4 class="mb-0 text-primary" id="grandTotal">Rp 0</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xxl-4 col-lg-5">
+                <div class="card bg-white border-0 rounded-3 mb-4">
+                    <div class="card-body p-4">
+                        <h3 class="mb-3 mb-lg-4">Summary</h3>
+                        
+                        <div class="alert alert-warning bg-warning bg-opacity-10 border-0 p-3 mb-4">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <i class="ri-edit-line fs-18 text-warning"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <p class="mb-0 small">You are editing a <strong>Draft</strong> request. Remember to submit it when ready.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Items:</span>
+                                <span id="itemCount">@Model.Items.Count item(s)</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">Total:</span>
+                                <span class="fw-bold text-primary" id="summaryTotal">Rp 0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex flex-wrap gap-3">
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary py-2 px-4 fw-medium fs-16">
+                        <i class="ri-arrow-left-line me-1"></i> Cancel
+                    </a>
+                    <button type="submit" name="action" value="save" class="btn btn-light py-2 px-4 fw-medium fs-16">
+                        <i class="ri-save-line me-1"></i> Save Changes
+                    </button>
+                    <button type="submit" name="action" value="submit" class="btn btn-primary py-2 px-4 fw-medium fs-16">
+                        <i class="ri-send-plane-line me-1"></i> Save & Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            let itemIndex = @Model.Items.Count - 1;
+            let catalogItems = [];
+
+            // Fetch catalog items on load
+            $.get('@Url.Action("GetCatalogItems", "PurchasesRequest")', function(response) {
+                if (response.success) {
+                    catalogItems = response.data;
+                    initializeRows();
+                } else {
+                    console.error('Failed to load catalog items:', response.message);
+                }
+            });
+            
+            function formatCurrency(amount) {
+                return 'Rp ' + amount.toLocaleString('id-ID');
+            }
+            
+            function calculateSubtotal(row) {
+                const qty = parseFloat($(row).find('.item-quantity').val()) || 0;
+                const price = parseFloat($(row).find('.item-price').val()) || 0;
+                const subtotal = qty * price;
+                $(row).find('.item-subtotal').val(formatCurrency(subtotal));
+                return subtotal;
+            }
+            
+            function calculateGrandTotal() {
+                let total = 0;
+                $('.item-row').each(function() {
+                    total += calculateSubtotal(this);
+                });
+                $('#grandTotal').text(formatCurrency(total));
+                $('#summaryTotal').text(formatCurrency(total));
+                
+                const itemCount = $('.item-row').length;
+                $('#itemCount').text(itemCount + ' item(s)');
+                
+                // Show/hide remove buttons
+                if (itemCount > 1) {
+                    $('.remove-item-btn').show();
+                } else {
+                    $('.remove-item-btn').hide();
+                }
+            }
+            
+            function updateItemIndices() {
+                $('.item-row').each(function(index) {
+                    $(this).attr('data-index', index);
+                    $(this).find('h6').text('Item #' + (index + 1));
+                    $(this).find('input, select').each(function() {
+                        const name = $(this).attr('name');
+                        if (name) {
+                            $(this).attr('name', name.replace(/Items\[\d+\]/, 'Items[' + index + ']'));
+                        }
+                    });
+                });
+                itemIndex = $('.item-row').length - 1;
+            }
+
+            // Populate select options
+            function getCatalogOptionsHtml() {
+                let options = '<option value="">-- Select Item --</option>';
+                catalogItems.forEach(item => {
+                    options += `<option value="${item.id}" 
+                        data-price="${item.standardPrice}" 
+                        data-unit="${item.uoM}" 
+                        data-name="${item.name}">${item.code} - ${item.name}</option>`;
+                });
+                return options;
+            }
+
+            function initializeRows() {
+                // Initialize existing rows
+                $('.item-row').each(function() {
+                    const row = $(this);
+                    if (catalogItems.length > 0) {
+                        const select = row.find('.item-select');
+                        if (select.children().length <= 1) {
+                             select.html(getCatalogOptionsHtml());
+                        }
+                    }
+                    
+                    // Set unit dropdown value from data attribute
+                    const unitSelect = row.find('.item-unit');
+                    const unitValue = unitSelect.data('value');
+                    if (unitValue) {
+                        unitSelect.val(unitValue);
+                    }
+                });
+                calculateGrandTotal();
+            }
+            
+            // Add new item
+            $('#addItemBtn').click(function() {
+                itemIndex++;
+                const newItem = `
+                    <div class="item-row border rounded-3 p-3 mb-3" data-index="${itemIndex}">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">Item #${itemIndex + 1}</h6>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input catalog-checkbox" type="checkbox" id="catalogSwitch${itemIndex}">
+                                    <label class="form-check-label small" for="catalogSwitch${itemIndex}">From Catalog</label>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="hidden" name="Items[${itemIndex}].ItemId" class="item-id" />
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Item Name <span class="text-danger">*</span></label>
+                                    
+                                    <!-- Custom Input -->
+                                    <input type="text" name="Items[${itemIndex}].ItemName" class="form-control item-name-input" placeholder="e.g., Laptop Dell XPS 15" required />
+                                    
+                                    <!-- Catalog Select -->
+                                    <select class="form-select item-select" style="display:none;">
+                                        ${getCatalogOptionsHtml()}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Description</label>
+                                    <input type="text" name="Items[${itemIndex}].Description" class="form-control item-desc" placeholder="Specifications or details" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Quantity <span class="text-danger">*</span></label>
+                                    <input type="number" name="Items[${itemIndex}].Quantity" class="form-control item-quantity" min="1" value="1" required />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Unit</label>
+                                    <select name="Items[${itemIndex}].Unit" class="form-select item-unit">
+                                        <option value="pcs">Pcs</option>
+                                        <option value="unit">Unit</option>
+                                        <option value="box">Box</option>
+                                        <option value="set">Set</option>
+                                        <option value="pack">Pack</option>
+                                        <option value="kg">Kg</option>
+                                        <option value="ltr">Ltr</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Unit Price (Rp) <span class="text-danger">*</span></label>
+                                    <input type="number" name="Items[${itemIndex}].UnitPrice" class="form-control item-price" min="0" step="1000" placeholder="0" required />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label class="label text-secondary">Subtotal</label>
+                                    <input type="text" class="form-control item-subtotal" readonly value="Rp 0" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#itemsContainer').append(newItem);
+                calculateGrandTotal();
+            });
+            
+            // Remove item
+            $(document).on('click', '.remove-item-btn', function() {
+                $(this).closest('.item-row').remove();
+                updateItemIndices();
+                calculateGrandTotal();
+            });
+            
+            // Calculate on input change
+            $(document).on('input', '.item-quantity, .item-price', function() {
+                calculateGrandTotal();
+            });
+
+            // Handle Catalog Switch
+            $(document).on('change', '.catalog-checkbox', function() {
+                const row = $(this).closest('.item-row');
+                const isCatalog = $(this).is(':checked');
+                const nameInput = row.find('.item-name-input');
+                const select = row.find('.item-select');
+                const priceInput = row.find('.item-price');
+                const itemIdInput = row.find('.item-id');
+
+                if (isCatalog) {
+                    nameInput.hide();
+                    select.show();
+                    itemIdInput.val('');
+                    priceInput.prop('readonly', true);
+                } else {
+                    nameInput.show().prop('readonly', false);
+                    select.hide().val('');
+                    itemIdInput.val('');
+                    priceInput.prop('readonly', false);
+                }
+            });
+
+            // Handle Catalog Item Selection
+            $(document).on('change', '.item-select', function() {
+                const row = $(this).closest('.item-row');
+                const selectedOption = $(this).find('option:selected');
+                const itemId = $(this).val();
+                
+                if (itemId) {
+                    const name = selectedOption.data('name');
+                    const price = selectedOption.data('price');
+                    const unit = selectedOption.data('unit');
+
+                    row.find('.item-id').val(itemId);
+                    row.find('.item-name-input').val(name);
+                    row.find('.item-price').val(price);
+                    row.find('.item-unit').val(unit.toLowerCase()); 
+
+                    calculateGrandTotal();
+                } else {
+                    row.find('.item-id').val('');
+                    row.find('.item-name-input').val('');
+                    row.find('.item-price').val('');
+                }
+            });
+            
+            // Initial calculation
+            calculateGrandTotal();
+            
+            // Form validation
+            $('#editForm').submit(function(e) {
+                const itemCount = $('.item-row').length;
+                if (itemCount === 0) {
+                    e.preventDefault();
+                    alert('Please add at least one item to your request.');
+                    return false;
+                }
+                
+                let hasValidItem = false;
+                $('.item-row').each(function() {
+                    const name = $(this).find('input[name$=".ItemName"]').val();
+                    const qty = $(this).find('.item-quantity').val();
+                    const price = $(this).find('.item-price').val();
+                    
+                    if (name && qty > 0 && price > 0) {
+                        hasValidItem = true;
+                    }
+                });
+                
+                if (!hasValidItem) {
+                    e.preventDefault();
+                    alert('Please fill in all required fields for at least one item.');
+                    return false;
+                }
+
+                // Enable disabled fields before submit
+                $('.item-unit').prop('disabled', false);
+                
+                return true;
+            });
+        });
+    </script>
+}

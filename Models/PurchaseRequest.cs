@@ -190,6 +190,11 @@ public class PurchaseRequest : AuditableEntity
     /// </summary>
     public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
 
+    /// <summary>
+    /// Collection dokumen attachments (quotations, invoices, etc)
+    /// </summary>
+    public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
+
     // Business Methods
 
     /// <summary>

@@ -40,6 +40,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     public DbSet<VendorItem> VendorItems { get; set; }
     public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
     public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
+    public DbSet<Attachment> Attachments { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -71,6 +72,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
         modelBuilder.Entity<VendorItem>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PurchaseOrder>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PurchaseOrderItem>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Attachment>().HasQueryFilter(e => !e.IsDeleted);
         // AuditLog tidak perlu soft delete filter - kita ingin bisa query semua audit logs
 
         // Configure relationships dan constraints
@@ -87,6 +89,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
         ConfigureVendorItemEntity(modelBuilder);
         ConfigurePurchaseOrderEntity(modelBuilder);
         ConfigurePurchaseOrderItemEntity(modelBuilder);
+        ConfigureAttachmentEntity(modelBuilder);
     }
 
     private void ConfigureUserEntity(ModelBuilder modelBuilder)
@@ -378,6 +381,28 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 .WithMany(i => i.PurchaseOrderItems)
                 .HasForeignKey(e => e.ItemId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+
+    private void ConfigureAttachmentEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Attachment>(entity =>
+        {
+            entity.ToTable("Attachments");
+
+            entity.HasIndex(e => e.PurchaseRequestId);
+            entity.HasIndex(e => e.PurchaseOrderId);
+            entity.HasIndex(e => e.FileName).IsUnique();
+
+            entity.HasOne(a => a.PurchaseRequest)
+                .WithMany(pr => pr.Attachments)
+                .HasForeignKey(a => a.PurchaseRequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(a => a.PurchaseOrder)
+                .WithMany(po => po.Attachments)
+                .HasForeignKey(a => a.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

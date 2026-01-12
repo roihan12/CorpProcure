@@ -366,4 +366,113 @@ public class VendorsController : Controller
     }
 
     #endregion
+
+    #region VendorItems Actions
+
+    // GET: Vendors/GetVendorItems/5 (API endpoint for AJAX)
+    [HttpGet]
+    public async Task<IActionResult> GetVendorItems(Guid id)
+    {
+        var vendorItemService = HttpContext.RequestServices.GetRequiredService<IVendorItemService>();
+        var result = await vendorItemService.GetByVendorIdAsync(id);
+        
+        if (!result.Success)
+        {
+            return Json(new { success = false, message = result.ErrorMessage });
+        }
+
+        return Json(new { success = true, data = result.Data });
+    }
+
+    // GET: Vendors/GetAvailableItems/5 (API - items not yet added to vendor)
+    [HttpGet]
+    public async Task<IActionResult> GetAvailableItems(Guid vendorId)
+    {
+        var vendorItemService = HttpContext.RequestServices.GetRequiredService<IVendorItemService>();
+        var itemService = HttpContext.RequestServices.GetRequiredService<IItemService>();
+        
+        // Get all items for dropdown
+        var allItemsResult = await itemService.GetItemsForDropdownAsync();
+        if (!allItemsResult.Success)
+        {
+            return Json(new { success = false, message = allItemsResult.ErrorMessage });
+        }
+
+        // Get vendor's existing items
+        var vendorItemsResult = await vendorItemService.GetByVendorIdAsync(vendorId);
+        var existingItemIds = vendorItemsResult.Success 
+            ? vendorItemsResult.Data!.Select(vi => vi.ItemId).ToHashSet() 
+            : new HashSet<Guid>();
+
+        // Filter to items not yet added
+        var availableItems = allItemsResult.Data!
+            .Where(i => !existingItemIds.Contains(i.Id))
+            .Select(i => new { id = i.Id, code = i.Code, name = i.Name, standardPrice = i.StandardPrice, uom = i.UoM })
+            .ToList();
+
+        return Json(new { success = true, data = availableItems });
+    }
+
+    // POST: Vendors/AddVendorItem
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddVendorItem([FromBody] DTOs.VendorItem.CreateVendorItemDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return Json(new { success = false, message = "Invalid data" });
+        }
+
+        var vendorItemService = HttpContext.RequestServices.GetRequiredService<IVendorItemService>();
+        var userId = GetCurrentUserId();
+        var result = await vendorItemService.CreateAsync(dto, userId);
+
+        if (!result.Success)
+        {
+            return Json(new { success = false, message = result.ErrorMessage });
+        }
+
+        return Json(new { success = true, id = result.Data });
+    }
+
+    // POST: Vendors/UpdateVendorItem
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateVendorItem([FromBody] DTOs.VendorItem.UpdateVendorItemDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            return Json(new { success = false, message = "Invalid data" });
+        }
+
+        var vendorItemService = HttpContext.RequestServices.GetRequiredService<IVendorItemService>();
+        var userId = GetCurrentUserId();
+        var result = await vendorItemService.UpdateAsync(dto, userId);
+
+        if (!result.Success)
+        {
+            return Json(new { success = false, message = result.ErrorMessage });
+        }
+
+        return Json(new { success = true });
+    }
+
+    // POST: Vendors/DeleteVendorItem/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteVendorItem(Guid id)
+    {
+        var vendorItemService = HttpContext.RequestServices.GetRequiredService<IVendorItemService>();
+        var userId = GetCurrentUserId();
+        var result = await vendorItemService.DeleteAsync(id, userId);
+
+        if (!result.Success)
+        {
+            return Json(new { success = false, message = result.ErrorMessage });
+        }
+
+        return Json(new { success = true });
+    }
+
+    #endregion
 }

@@ -483,5 +483,110 @@ namespace CorpProcure.Controllers
             // Let's verify what PurchaseOrderDto has.
             return RedirectToAction(nameof(Index));
         }
+
+        #region Attachment Actions
+
+        // GET: PurchaseOrder/GetAttachments/5
+        [HttpGet]
+        public async Task<IActionResult> GetAttachments(Guid id)
+        {
+            var fileUploadService = HttpContext.RequestServices.GetRequiredService<IFileUploadService>();
+            var result = await fileUploadService.GetByPurchaseOrderIdAsync(id);
+
+            if (!result.Success)
+            {
+                return Json(new { success = false, message = result.ErrorMessage });
+            }
+
+            var attachments = result.Data!.Select(a => new
+            {
+                a.Id,
+                a.OriginalFileName,
+                a.ContentType,
+                a.FileSizeFormatted,
+                a.Type,
+                TypeDisplay = a.Type.ToString(),
+                a.Description,
+                CreatedAt = a.CreatedAt.ToString("dd MMM yyyy HH:mm"),
+                DownloadUrl = Url.Action("DownloadAttachment", "PurchaseOrders", new { id = a.Id })
+            });
+
+            return Json(new { success = true, data = attachments });
+        }
+
+        // POST: PurchaseOrder/UploadAttachment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadAttachment(Guid purchaseOrderId, IFormFile file, Models.AttachmentType type, string? description)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return Json(new { success = false, message = "No file uploaded" });
+            }
+
+            var fileUploadService = HttpContext.RequestServices.GetRequiredService<IFileUploadService>();
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            
+            var result = await fileUploadService.UploadForPurchaseOrderAsync(file, purchaseOrderId, type, description, userId);
+
+            if (!result.Success)
+            {
+                return Json(new { success = false, message = result.ErrorMessage });
+            }
+
+            return Json(new { 
+                success = true, 
+                attachment = new
+                {
+                    result.Data!.Id,
+                    result.Data.OriginalFileName,
+                    result.Data.FileSizeFormatted
+                }
+            });
+        }
+
+        // POST: PurchaseOrder/DeleteAttachment/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAttachment(Guid id)
+        {
+            var fileUploadService = HttpContext.RequestServices.GetRequiredService<IFileUploadService>();
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            
+            var result = await fileUploadService.DeleteAsync(id, userId);
+
+            if (!result.Success)
+            {
+                return Json(new { success = false, message = result.ErrorMessage });
+            }
+
+            return Json(new { success = true });
+        }
+
+        // GET: PurchaseOrder/DownloadAttachment/5
+        public async Task<IActionResult> DownloadAttachment(Guid id)
+        {
+            var fileUploadService = HttpContext.RequestServices.GetRequiredService<IFileUploadService>();
+            var result = await fileUploadService.GetByIdAsync(id);
+
+            if (!result.Success)
+            {
+                return NotFound();
+            }
+
+            var attachment = result.Data!;
+            var webHostEnvironment = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
+            var fullPath = Path.Combine(webHostEnvironment.WebRootPath, attachment.FilePath.Replace("/", Path.DirectorySeparatorChar.ToString()));
+
+            if (!System.IO.File.Exists(fullPath))
+            {
+                return NotFound();
+            }
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
+            return File(fileBytes, attachment.ContentType, attachment.OriginalFileName);
+        }
+
+        #endregion
     }
 }

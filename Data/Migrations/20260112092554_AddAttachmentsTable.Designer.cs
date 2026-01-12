@@ -4,6 +4,7 @@ using CorpProcure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CorpProcure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260112092554_AddAttachmentsTable")]
+    partial class AddAttachmentsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -163,9 +166,6 @@ namespace CorpProcure.Data.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<Guid?>("PurchaseOrderId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid?>("PurchaseRequestId")
                         .HasColumnType("uniqueidentifier");
 
@@ -182,8 +182,6 @@ namespace CorpProcure.Data.Migrations
 
                     b.HasIndex("FileName")
                         .IsUnique();
-
-                    b.HasIndex("PurchaseOrderId");
 
                     b.HasIndex("PurchaseRequestId");
 
@@ -1453,17 +1451,10 @@ namespace CorpProcure.Data.Migrations
 
             modelBuilder.Entity("CorpProcure.Models.Attachment", b =>
                 {
-                    b.HasOne("CorpProcure.Models.PurchaseOrder", "PurchaseOrder")
-                        .WithMany("Attachments")
-                        .HasForeignKey("PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("CorpProcure.Models.PurchaseRequest", "PurchaseRequest")
                         .WithMany("Attachments")
                         .HasForeignKey("PurchaseRequestId")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("PurchaseOrder");
 
                     b.Navigation("PurchaseRequest");
                 });
@@ -1719,8 +1710,6 @@ namespace CorpProcure.Data.Migrations
 
             modelBuilder.Entity("CorpProcure.Models.PurchaseOrder", b =>
                 {
-                    b.Navigation("Attachments");
-
                     b.Navigation("Items");
                 });
 

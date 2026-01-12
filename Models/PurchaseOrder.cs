@@ -155,4 +155,9 @@ public class PurchaseOrder : BaseEntity
     /// Items dalam PO ini
     /// </summary>
     public ICollection<PurchaseOrderItem> Items { get; set; } = new List<PurchaseOrderItem>();
+
+    /// <summary>
+    /// Dokumen attachments (Invoice, Delivery Note, Contract)
+    /// </summary>
+    public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
 }

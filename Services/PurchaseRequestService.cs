@@ -28,7 +28,7 @@ public class PurchaseRequestService : IPurchaseRequestService
         _logger = logger;
     }
 
-    public async Task<Result<Guid>> CreateAsync(CreatePurchaseRequestDto dto, Guid userId)
+    public async Task<Result<Guid>> CreateAsync(CreatePurchaseRequestDto dto, Guid userId, bool submitNow = true)
     {
         try
         {
@@ -53,15 +53,18 @@ public class PurchaseRequestService : IPurchaseRequestService
             if (totalAmount <= 0)
                 return Result<Guid>.Fail("Total amount must be greater than zero");
 
-            // 4. Check budget availability
+            // 4. Check budget availability (only mandatory when submitting)
             var budget = await _budgetService.GetBudgetAsync(user.DepartmentId);
-            if (budget == null)
-                return Result<Guid>.Fail($"No budget found for {user.Department.Name} in {DateTime.Now.Year}");
-
-            if (!budget.HasSufficientBudget(totalAmount))
+            if (submitNow)
             {
-                return Result<Guid>.Fail(
-                    $"Insufficient budget. Required: Rp {totalAmount:N0}, Available: Rp {budget.AvailableAmount:N0}");
+                if (budget == null)
+                    return Result<Guid>.Fail($"No budget found for {user.Department.Name} in {DateTime.Now.Year}");
+
+                if (!budget.HasSufficientBudget(totalAmount))
+                {
+                    return Result<Guid>.Fail(
+                        $"Insufficient budget. Required: Rp {totalAmount:N0}, Available: Rp {budget.AvailableAmount:N0}");
+                }
             }
 
             // 5. Generate request number
@@ -95,14 +98,20 @@ public class PurchaseRequestService : IPurchaseRequestService
                 });
             }
 
-            // 8. Submit request (change status to PendingManagerApproval)
-            pr.Submit();
-
-            // 9. Reserve budget
-            var budgetReserved = await _budgetService.ReserveBudgetAsync(budget.Id, totalAmount);
-            if (!budgetReserved)
+            // 8. Only submit if user clicked "Submit Request" (not "Save as Draft")
+            if (submitNow)
             {
-                return Result<Guid>.Fail("Failed to reserve budget");
+                pr.Submit();
+
+                // 9. Reserve budget only when submitting
+                if (budget != null)
+                {
+                    var budgetReserved = await _budgetService.ReserveBudgetAsync(budget.Id, totalAmount);
+                    if (!budgetReserved)
+                    {
+                        return Result<Guid>.Fail("Failed to reserve budget");
+                    }
+                }
             }
 
             // 10. Save to database
@@ -110,8 +119,8 @@ public class PurchaseRequestService : IPurchaseRequestService
             await _context.SaveChangesAsync();
 
             _logger.LogInformation(
-                "Purchase request {RequestNumber} created by user {UserId} for Rp {Amount:N0}",
-                requestNumber, userId, totalAmount);
+                "Purchase request {RequestNumber} created by user {UserId} for Rp {Amount:N0} (Draft: {IsDraft})",
+                requestNumber, userId, totalAmount, !submitNow);
 
             return Result<Guid>.Ok(pr.Id);
         }
@@ -554,6 +563,63 @@ public class PurchaseRequestService : IPurchaseRequestService
         }
     }
 
+    public async Task<Result> SubmitAsync(Guid requestId, Guid userId)
+    {
+        try
+        {
+            var pr = await _context.PurchaseRequests
+                .Include(p => p.Department)
+                .FirstOrDefaultAsync(p => p.Id == requestId);
+
+            if (pr == null)
+                return Result.Fail("Purchase request not found");
+
+            if (pr.RequesterId != userId)
+                return Result.Fail("You can only submit your own requests");
+
+            if (pr.Status != RequestStatus.Draft)
+                return Result.Fail("Only draft requests can be submitted");
+
+            // Check budget availability
+            var budget = await _budgetService.GetBudgetAsync(pr.DepartmentId);
+            if (budget == null)
+                return Result.Fail($"No budget found for {pr.Department.Name} in {DateTime.Now.Year}");
+
+            if (!budget.HasSufficientBudget(pr.TotalAmount))
+            {
+                return Result.Fail(
+                    $"Insufficient budget. Required: Rp {pr.TotalAmount:N0}, Available: Rp {budget.AvailableAmount:N0}");
+            }
+
+            // Submit the request (change status to PendingManager)
+            pr.Submit();
+
+            // Reserve budget
+            var budgetReserved = await _budgetService.ReserveBudgetAsync(budget.Id, pr.TotalAmount);
+            if (!budgetReserved)
+            {
+                return Result.Fail("Failed to reserve budget");
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Purchase request {RequestId} submitted by user {UserId}",
+                requestId, userId);
+
+            return Result.Ok();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Result.Fail(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting request {RequestId}", requestId);
+            return Result.Fail("An error occurred while submitting the request");
+        }
+    }
+
     /* Deprecated - moved to PurchaseOrderService
     public async Task<Result<string>> GeneratePurchaseOrderAsync(Guid requestId, Guid vendorId, Guid userId)
     {
@@ -596,6 +662,7 @@ public class PurchaseRequestService : IPurchaseRequestService
                 ItemName = i.ItemName,
                 Description = i.Description,
                 Quantity = i.Quantity,
+                Unit = i.Unit ?? "pcs",
                 UnitPrice = i.UnitPrice
             }).ToList(),
             ApprovalHistories = pr.ApprovalHistories.Select(ah => new ApprovalHistoryDto

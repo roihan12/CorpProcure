@@ -12,7 +12,10 @@ namespace CorpProcure.Services
         /// <summary>
         /// Create new purchase request
         /// </summary>
-        Task<Result<Guid>> CreateAsync(CreatePurchaseRequestDto dto, Guid userId);
+        /// <param name="dto">Request data</param>
+        /// <param name="userId">User creating the request</param>
+        /// <param name="submitNow">If true, submit for approval. If false, save as draft.</param>
+        Task<Result<Guid>> CreateAsync(CreatePurchaseRequestDto dto, Guid userId, bool submitNow = true);
 
         /// <summary>
         /// Get purchase request by ID
@@ -59,6 +62,10 @@ namespace CorpProcure.Services
         /// </summary>
         Task<Result> CancelAsync(Guid requestId, Guid userId);
 
+        /// <summary>
+        /// Submit a draft purchase request for approval
+        /// </summary>
+        Task<Result> SubmitAsync(Guid requestId, Guid userId);
 
     }
 

@@ -129,6 +129,12 @@ public static class IdentityConfiguration
         services.AddScoped<IItemService, ItemService>();
         services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 
+        // Add Vendor Item service (contract prices)
+        services.AddScoped<IVendorItemService, VendorItemService>();
+
+        // Add File Upload service (attachments)
+        services.AddScoped<IFileUploadService, FileUploadService>();
+
         return services;
     }
 
