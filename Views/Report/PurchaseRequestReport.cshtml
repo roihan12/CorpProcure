@@ -126,9 +126,9 @@
                                     }
                                 </td>
                                 <td>
-                                    @if (!string.IsNullOrEmpty(item.PoNumber))
+                                    @if (item.PurchaseOrders != null && item.PurchaseOrders.Any())
                                     {
-                                        <span class="font-monospace text-primary">@item.PoNumber</span>
+                                        <span class="font-monospace text-primary">@item.PurchaseOrders.OrderByDescending(p => p.GeneratedAt).FirstOrDefault()?.PoNumber</span>
                                     }
                                     else
                                     {

@@ -21,7 +21,23 @@ public class RequestItem : BaseEntity
     public PurchaseRequest PurchaseRequest { get; set; } = null!;
 
     /// <summary>
-    /// Nama item/barang
+    /// ID Item dari Catalog (nullable untuk custom items)
+    /// </summary>
+    public Guid? ItemId { get; set; }
+
+    /// <summary>
+    /// Navigation property ke Item Catalog
+    /// </summary>
+    public Item? Item { get; set; }
+
+    /// <summary>
+    /// Flag: apakah item ini custom (tidak dari catalog)
+    /// </summary>
+    [NotMapped]
+    public bool IsCustomItem => ItemId == null;
+
+    /// <summary>
+    /// Nama item/barang (manual atau dari catalog)
     /// </summary>
     [Required]
     [MaxLength(200)]

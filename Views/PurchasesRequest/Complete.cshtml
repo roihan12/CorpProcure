@@ -1,6 +1,7 @@
 @using CorpProcure.Models
 @using CorpProcure.Models.Enums
-@model PurchaseRequest
+@using CorpProcure.DTOs.PurchaseRequest
+@model PurchaseRequestDto
 @{
     ViewData["Title"] = "Generate Purchase Order";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -120,16 +121,16 @@
                                     <td class="fw-medium">@Model.RequestNumber</td>
                                 </tr>
                                 <tr>
-                                    <th scope="row">Title</th>
-                                    <td>@Model.Title</td>
+                                    <th scope="row">Description</th>
+                                    <td>@Model.Description</td>
                                 </tr>
                                 <tr>
                                     <th scope="row">Requester</th>
-                                    <td>@Model.Requester?.FullName</td>
+                                    <td>@Model.RequesterName</td>
                                 </tr>
                                 <tr>
                                     <th scope="row">Department</th>
-                                    <td>@Model.Department?.Name</td>
+                                    <td>@Model.DepartmentName</td>
                                 </tr>
                                 <tr>
                                     <th scope="row">Total Amount</th>
@@ -143,14 +144,14 @@
                                     <th scope="row">Manager Approved</th>
                                     <td>
                                         <i class="ri-checkbox-circle-fill text-success me-1"></i>
-                                        @Model.ManagerApprover?.FullName on @Model.ManagerApprovalDate?.ToString("dd MMM yyyy")
+                                        @Model.ManagerApproverName on @Model.ManagerApprovalDate?.ToString("dd MMM yyyy")
                                     </td>
                                 </tr>
                                 <tr>
                                     <th scope="row">Finance Approved</th>
                                     <td>
                                         <i class="ri-checkbox-circle-fill text-success me-1"></i>
-                                        @Model.FinanceApprover?.FullName on @Model.FinanceApprovalDate?.ToString("dd MMM yyyy")
+                                        @Model.FinanceApproverName on @Model.FinanceApprovalDate?.ToString("dd MMM yyyy")
                                     </td>
                                 </tr>
                             </tbody>

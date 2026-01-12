@@ -129,7 +129,7 @@
                                                     </a>
                                                 }
                                                 
-                                                @if (item.Status == RequestStatus.Approved && string.IsNullOrEmpty(item.PoNumber))
+                                                @if (item.Status == RequestStatus.Approved && !item.PurchaseOrders.Any())
                                                 {
                                                     <a asp-action="GeneratePO" asp-route-id="@item.Id" class="ps-0 border-0 bg-transparent lh-1 position-relative top-2" title="Generate PO">
                                                         <i class="material-symbols-outlined fs-16 text-success">description</i>

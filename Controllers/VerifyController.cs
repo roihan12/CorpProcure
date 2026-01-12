@@ -28,6 +28,7 @@ namespace CorpProcure.Controllers
                 .Include(p => p.Items)
                 .Include(p => p.ManagerApprover)
                 .Include(p => p.FinanceApprover)
+                .Include(p => p.PurchaseOrders)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (request == null)
@@ -37,7 +38,7 @@ namespace CorpProcure.Controllers
                 return View("Invalid");
             }
 
-            if (string.IsNullOrEmpty(request.PoNumber))
+            if (!request.PurchaseOrders.Any())
             {
                 ViewData["IsValid"] = false;
                 ViewData["Message"] = "This purchase request does not have a PO generated yet.";

@@ -4,6 +4,7 @@ using CorpProcure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CorpProcure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260111171313_AddItemCatalogEntities")]
+    partial class AddItemCatalogEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -459,219 +462,6 @@ namespace CorpProcure.Data.Migrations
                     b.ToTable("ItemCategories");
                 });
 
-            modelBuilder.Entity("CorpProcure.Models.PurchaseOrder", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("BillingAddress")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("CancelledAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CancelledBy")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("CancelledReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Discount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("ExpectedDeliveryDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("GeneratedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("GeneratedByUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("GrandTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Incoterms")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<int>("PaymentTerms")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("PoDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PoNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid>("PurchaseRequestId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("QuotationReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ShippingAddress")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<decimal>("ShippingCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Subtotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TaxAmount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TaxRate")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("VendorId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GeneratedByUserId");
-
-                    b.HasIndex("PoDate");
-
-                    b.HasIndex("PoNumber")
-                        .IsUnique();
-
-                    b.HasIndex("PurchaseRequestId");
-
-                    b.HasIndex("Status");
-
-                    b.HasIndex("VendorId");
-
-                    b.ToTable("PurchaseOrders");
-                });
-
-            modelBuilder.Entity("CorpProcure.Models.PurchaseOrderItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ItemCode")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<Guid?>("ItemId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ItemName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<Guid>("PurchaseOrderId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<Guid?>("RequestItemId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("TotalPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("UoM")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("VendorItemId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ItemId");
-
-                    b.HasIndex("PurchaseOrderId");
-
-                    b.HasIndex("VendorItemId");
-
-                    b.ToTable("PurchaseOrderItems");
-                });
-
             modelBuilder.Entity("CorpProcure.Models.PurchaseRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -727,6 +517,17 @@ namespace CorpProcure.Data.Migrations
                     b.Property<string>("ManagerNotes")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("PoDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PoFilePath")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PoNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<Guid?>("RejectedById")
                         .HasColumnType("uniqueidentifier");
@@ -787,6 +588,8 @@ namespace CorpProcure.Data.Migrations
                     b.HasIndex("FinanceApproverId");
 
                     b.HasIndex("ManagerApproverId");
+
+                    b.HasIndex("PoNumber");
 
                     b.HasIndex("RejectedById");
 
@@ -1408,57 +1211,6 @@ namespace CorpProcure.Data.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("CorpProcure.Models.PurchaseOrder", b =>
-                {
-                    b.HasOne("CorpProcure.Models.User", "GeneratedByUser")
-                        .WithMany()
-                        .HasForeignKey("GeneratedByUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CorpProcure.Models.PurchaseRequest", "PurchaseRequest")
-                        .WithMany("PurchaseOrders")
-                        .HasForeignKey("PurchaseRequestId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("CorpProcure.Models.Vendor", "Vendor")
-                        .WithMany("PurchaseOrders")
-                        .HasForeignKey("VendorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("GeneratedByUser");
-
-                    b.Navigation("PurchaseRequest");
-
-                    b.Navigation("Vendor");
-                });
-
-            modelBuilder.Entity("CorpProcure.Models.PurchaseOrderItem", b =>
-                {
-                    b.HasOne("CorpProcure.Models.Item", "Item")
-                        .WithMany("PurchaseOrderItems")
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("CorpProcure.Models.PurchaseOrder", "PurchaseOrder")
-                        .WithMany("Items")
-                        .HasForeignKey("PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CorpProcure.Models.VendorItem", "VendorItem")
-                        .WithMany()
-                        .HasForeignKey("VendorItemId");
-
-                    b.Navigation("Item");
-
-                    b.Navigation("PurchaseOrder");
-
-                    b.Navigation("VendorItem");
-                });
-
             modelBuilder.Entity("CorpProcure.Models.PurchaseRequest", b =>
                 {
                     b.HasOne("CorpProcure.Models.Department", "Department")
@@ -1488,9 +1240,10 @@ namespace CorpProcure.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("CorpProcure.Models.Vendor", null)
+                    b.HasOne("CorpProcure.Models.Vendor", "Vendor")
                         .WithMany("PurchaseRequests")
-                        .HasForeignKey("VendorId");
+                        .HasForeignKey("VendorId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Department");
 
@@ -1501,22 +1254,21 @@ namespace CorpProcure.Data.Migrations
                     b.Navigation("RejectedBy");
 
                     b.Navigation("Requester");
+
+                    b.Navigation("Vendor");
                 });
 
             modelBuilder.Entity("CorpProcure.Models.RequestItem", b =>
                 {
-                    b.HasOne("CorpProcure.Models.Item", "Item")
+                    b.HasOne("CorpProcure.Models.Item", null)
                         .WithMany("RequestItems")
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("ItemId");
 
                     b.HasOne("CorpProcure.Models.PurchaseRequest", "PurchaseRequest")
                         .WithMany("Items")
                         .HasForeignKey("PurchaseRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Item");
 
                     b.Navigation("PurchaseRequest");
                 });
@@ -1613,8 +1365,6 @@ namespace CorpProcure.Data.Migrations
 
             modelBuilder.Entity("CorpProcure.Models.Item", b =>
                 {
-                    b.Navigation("PurchaseOrderItems");
-
                     b.Navigation("RequestItems");
 
                     b.Navigation("VendorItems");
@@ -1625,18 +1375,11 @@ namespace CorpProcure.Data.Migrations
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("CorpProcure.Models.PurchaseOrder", b =>
-                {
-                    b.Navigation("Items");
-                });
-
             modelBuilder.Entity("CorpProcure.Models.PurchaseRequest", b =>
                 {
                     b.Navigation("ApprovalHistories");
 
                     b.Navigation("Items");
-
-                    b.Navigation("PurchaseOrders");
                 });
 
             modelBuilder.Entity("CorpProcure.Models.User", b =>
@@ -1650,8 +1393,6 @@ namespace CorpProcure.Data.Migrations
 
             modelBuilder.Entity("CorpProcure.Models.Vendor", b =>
                 {
-                    b.Navigation("PurchaseOrders");
-
                     b.Navigation("PurchaseRequests");
 
                     b.Navigation("VendorItems");

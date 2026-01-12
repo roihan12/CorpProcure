@@ -80,7 +80,7 @@
             @if (User.IsInRole("Procurement") || User.IsInRole("Admin"))
             {
                 <li class="menu-item @(Context.Request.Path.StartsWithSegments("/PurchasesOrder") ? "open" : "")">
-                    <a asp-controller="PurchaseOrder" asp-action="Index"
+                    <a asp-controller="PurchaseOrders" asp-action="Index"
                        class="menu-link @(Context.Request.Path.StartsWithSegments("/PurchasesOrder") ? "active" : "")">
                         <span class="material-symbols-outlined menu-icon">receipt_long</span>
                         <span class="title">Purchase Orders</span>
@@ -148,6 +148,14 @@
                        class="menu-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Vendors" ? "active" : "")">
                         <span class="material-symbols-outlined menu-icon">business</span>
                         <span class="title">Vendors</span>
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a asp-controller="Items" asp-action="Index"
+                       class="menu-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Items" ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">inventory_2</span>
+                        <span class="title">Item Catalog</span>
                     </a>
                 </li>
 

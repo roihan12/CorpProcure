@@ -1,0 +1,192 @@
+@using CorpProcure.DTOs.Item
+@model ItemDetailDto
+@{
+    ViewData["Title"] = $"Detail Item - {Model.Code}";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Detail Item</h3>
+
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-controller="Items" asp-action="Index" class="text-decoration-none">
+                        <span class="text-secondary fw-medium hover">Item Catalog</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">@Model.Code</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row">
+        <!-- Item Info -->
+        <div class="col-lg-8">
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <span class="badge bg-primary mb-2">@Model.Code</span>
+                            <h4 class="mb-1">@Model.Name</h4>
+                            @if (!string.IsNullOrEmpty(Model.Brand))
+                            {
+                                <p class="text-muted mb-0">@Model.Brand</p>
+                            }
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                                <i class="ri-edit-line me-1"></i> Edit
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Kategori</small>
+                            <span class="fw-medium">@Model.CategoryName</span>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Satuan</small>
+                            <span class="fw-medium">@Model.UoM</span>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Harga Standar</small>
+                            <span class="fw-medium text-primary">@Model.PriceDisplay</span>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted d-block">Min Order</small>
+                            <span class="fw-medium">@Model.MinOrderQty @Model.UoM</span>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <div class="mb-4">
+                            <h6 class="mb-2">Deskripsi/Spesifikasi</h6>
+                            <p class="mb-0">@Model.Description</p>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">SKU</small>
+                            <span>@(Model.Sku ?? "-")</span>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Status</small>
+                            <span class="badge @Model.StatusBadgeClass">@Model.StatusDisplay</span>
+                            @if (Model.IsAssetType)
+                            {
+                                <span class="badge bg-warning ms-1">Asset</span>
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">Dibuat</small>
+                            <span>@Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vendor Pricing -->
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-header bg-transparent border-0 p-4 pb-0">
+                    <h5 class="mb-0"><i class="ri-price-tag-3-line me-2"></i>Harga Vendor</h5>
+                </div>
+                <div class="card-body p-4">
+                    @if (Model.VendorPrices.Count == 0)
+                    {
+                        <div class="text-center py-4">
+                            <i class="ri-store-line fs-32 text-muted"></i>
+                            <p class="text-muted mt-2 mb-0">Belum ada vendor yang menyuplai item ini</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Vendor</th>
+                                        <th>Harga Kontrak</th>
+                                        <th>Validitas</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var vp in Model.VendorPrices)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-light text-dark me-1">@vp.VendorCode</span>
+                                                @vp.VendorName
+                                                @if (vp.IsPreferred)
+                                                {
+                                                    <span class="badge bg-warning ms-1">Preferred</span>
+                                                }
+                                            </td>
+                                            <td class="fw-medium">@vp.PriceDisplay</td>
+                                            <td>@vp.ValidityDisplay</td>
+                                            <td>
+                                                @if (vp.IsActive && vp.IsPriceValid)
+                                                {
+                                                    <span class="badge bg-success">Valid</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Expired</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card bg-white border-0 rounded-3 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="mb-3">Aksi</h6>
+                    <div class="d-grid gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                            <i class="ri-edit-line me-2"></i> Edit Item
+                        </a>
+                        <form asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post">
+                            <button type="submit" class="btn btn-outline-secondary w-100">
+                                <i class="ri-toggle-line me-2"></i>
+                                @(Model.IsActive ? "Nonaktifkan" : "Aktifkan")
+                            </button>
+                        </form>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="ri-arrow-go-back-line me-2"></i> Kembali
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.IsAssetType)
+            {
+                <div class="alert alert-warning bg-warning bg-opacity-10 border-0">
+                    <i class="ri-building-2-line me-2"></i>
+                    <strong>Item Asset</strong><br>
+                    <small>Item ini akan otomatis tercatat di Asset Management setelah proses Goods Receipt selesai.</small>
+                </div>
+            }
+        </div>
+    </div>
+</div>

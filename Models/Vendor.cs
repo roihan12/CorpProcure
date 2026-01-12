@@ -235,6 +235,16 @@ public class Vendor : BaseEntity
     /// </summary>
     public ICollection<PurchaseRequest> PurchaseRequests { get; set; } = new List<PurchaseRequest>();
 
+    /// <summary>
+    /// Collection item pricing untuk vendor ini
+    /// </summary>
+    public ICollection<VendorItem> VendorItems { get; set; } = new List<VendorItem>();
+
+    /// <summary>
+    /// Collection Purchase Orders
+    /// </summary>
+    public ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
+
     #endregion
 
     #region Helper Methods

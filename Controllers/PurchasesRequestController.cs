@@ -17,15 +17,18 @@ namespace CorpProcure.Controllers
         private readonly IPurchaseRequestService _purchaseRequestService;
         private readonly IPurchaseOrderPdfService _pdfService;
         private readonly ApplicationDbContext _context;
+        private readonly IItemService _itemService;
 
         public PurchasesRequestController(
             IPurchaseRequestService purchaseRequestService,
             IPurchaseOrderPdfService pdfService,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            IItemService itemService)
         {
             _purchaseRequestService = purchaseRequestService;
             _pdfService = pdfService;
             _context = context;
+            _itemService = itemService;
         }
 
         // GET: PurchasesRequest
@@ -36,6 +39,7 @@ namespace CorpProcure.Controllers
                 .Include(p => p.Requester)
                 .Include(p => p.Department)
                 .Include(p => p.Items)
+                .Include(p => p.PurchaseOrders) // Included for Index view checks
                 .Where(p => p.RequesterId.ToString() == userId)
                 .AsQueryable();
 
@@ -71,6 +75,18 @@ namespace CorpProcure.Controllers
         public IActionResult Create()
         {
             return View(new CreatePurchaseRequestDto());
+        }
+
+        // GET: PurchasesRequest/GetCatalogItems
+        [HttpGet]
+        public async Task<IActionResult> GetCatalogItems()
+        {
+            var result = await _itemService.GetItemsForDropdownAsync();
+            if (!result.Success)
+            {
+                return Json(new { success = false, message = result.ErrorMessage });
+            }
+            return Json(new { success = true, data = result.Data });
         }
 
         // POST: PurchasesRequest/Create
@@ -252,21 +268,15 @@ namespace CorpProcure.Controllers
         [Authorize(Roles = "Procurement,Finance,Admin")]
         public async Task<IActionResult> GeneratePO(Guid id)
         {
-            var request = await _context.PurchaseRequests
-                .Include(p => p.Requester)
-                .Include(p => p.Department)
-                .Include(p => p.Items)
-                .Include(p => p.ManagerApprover)
-                .Include(p => p.FinanceApprover)
-                .FirstOrDefaultAsync(p => p.Id == id);
+            var result = await _purchaseRequestService.GetByIdAsync(id);
 
-            if (request == null)
+            if (!result.Success)
             {
                 return NotFound();
             }
 
-            // Use Complete.cshtml view
-            return View("Complete", request);
+            // Use Complete.cshtml view with DTO
+            return View("Complete", result.Data);
         }
 
         // POST: PurchasesRequest/GeneratePOConfirmed
@@ -286,6 +296,7 @@ namespace CorpProcure.Controllers
             try
             {
                 var request = await _context.PurchaseRequests
+                    .Include(p => p.PurchaseOrders)
                     .FirstOrDefaultAsync(p => p.Id == id);
 
                 if (request == null)
@@ -293,14 +304,16 @@ namespace CorpProcure.Controllers
                     return NotFound();
                 }
 
-                if (string.IsNullOrEmpty(request.PoNumber))
+                var po = request.PurchaseOrders.OrderByDescending(x => x.GeneratedAt).FirstOrDefault();
+
+                if (po == null)
                 {
                     TempData["Error"] = "PO has not been generated for this request.";
                     return RedirectToAction(nameof(Details), new { id });
                 }
 
                 var pdfBytes = await _pdfService.GeneratePdfAsync(id);
-                var fileName = $"{request.PoNumber}.pdf";
+                var fileName = $"{po.PoNumber}.pdf";
 
                 return File(pdfBytes, "application/pdf", fileName);
             }

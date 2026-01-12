@@ -125,6 +125,10 @@ public static class IdentityConfiguration
         // Add Vendor Management service
         services.AddScoped<IVendorService, VendorService>();
 
+        // Add Item Catalog service
+        services.AddScoped<IItemService, ItemService>();
+        services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
+
         return services;
     }
 

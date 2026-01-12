@@ -34,11 +34,8 @@ namespace CorpProcure.Services
             var month = now.Month;
 
             // Count existing POs in current month
-            var count = await _context.PurchaseRequests
-                .Where(pr => pr.PoNumber != null &&
-                            pr.PoDate.HasValue &&
-                            pr.PoDate.Value.Year == year &&
-                            pr.PoDate.Value.Month == month)
+            var count = await _context.PurchaseOrders
+                .Where(po => po.PoDate.Year == year && po.PoDate.Month == month)
                 .CountAsync();
 
             // Format: PO-202601-0001

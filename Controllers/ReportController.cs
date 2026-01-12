@@ -39,6 +39,7 @@ namespace CorpProcure.Controllers
             var query = _context.PurchaseRequests
                 .Include(p => p.Requester)
                 .Include(p => p.Department)
+                .Include(p => p.PurchaseOrders)
                 .Where(p => p.CreatedAt >= startDate.Value.Date && p.CreatedAt <= endDate.Value.Date.AddDays(1).AddTicks(-1));
 
             if (status.HasValue)
@@ -64,6 +65,7 @@ namespace CorpProcure.Controllers
             var query = _context.PurchaseRequests
                 .Include(p => p.Requester)
                 .Include(p => p.Department)
+                .Include(p => p.PurchaseOrders)
                 .Where(p => p.CreatedAt >= startDate.Date && p.CreatedAt <= endDate.Date.AddDays(1).AddTicks(-1));
 
             if (status.HasValue)
@@ -108,11 +110,11 @@ namespace CorpProcure.Controllers
                     worksheet.Cell(currentRow, 2).Value = req.CreatedAt.ToString("yyyy-MM-dd");
                     worksheet.Cell(currentRow, 3).Value = req.Requester?.FullName;
                     worksheet.Cell(currentRow, 4).Value = req.Department?.Name;
-                    worksheet.Cell(currentRow, 5).Value = req.Title;
+                    worksheet.Cell(currentRow, 5).Value = req.Description;
                     worksheet.Cell(currentRow, 6).Value = req.TotalAmount;
                     worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "#,##0.00";
                     worksheet.Cell(currentRow, 7).Value = req.Status.ToString();
-                    worksheet.Cell(currentRow, 8).Value = req.PoNumber;
+                    worksheet.Cell(currentRow, 8).Value = req.PurchaseOrders.OrderByDescending(po => po.GeneratedAt).FirstOrDefault()?.PoNumber;
                 }
 
                 worksheet.Columns().AdjustToContents();

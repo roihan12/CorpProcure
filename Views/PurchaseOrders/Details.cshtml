@@ -2,8 +2,9 @@
 @using CorpProcure.Models.Enums
 @model PurchaseRequest
 @{
-    ViewData["Title"] = $"PO {Model.PoNumber ?? "Details"}";
+    ViewData["Title"] = $"PO {Model.PurchaseOrders.FirstOrDefault()?.PoNumber ?? "Details"}";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var po = Model.PurchaseOrders.OrderByDescending(x => x.GeneratedAt).FirstOrDefault();
 }
 
 <div class="main-content-container overflow-hidden">
@@ -24,7 +25,7 @@
                     </a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">
-                    <span class="fw-medium">@(Model.PoNumber ?? "Details")</span>
+                    <span class="fw-medium">@(po?.PoNumber ?? "Details")</span>
                 </li>
             </ol>
         </nav>
@@ -55,11 +56,32 @@
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <div>
-                            <h4 class="fs-24 fw-bold text-success mb-1">@Model.PoNumber</h4>
+                            <h4 class="fs-24 fw-bold text-success mb-1">@(po?.PoNumber ?? "-")</h4>
                             <p class="text-muted mb-0">Purchase Order</p>
                         </div>
-                        <span class="badge bg-success p-3 fs-14 fw-normal">
-                            <i class="ri-checkbox-circle-line me-1"></i> Generated
+                        @{
+                            var statusBadgeClass = po?.Status switch
+                            {
+                                PoStatus.Draft => "bg-warning",
+                                PoStatus.Issued => "bg-success",
+                                PoStatus.Acknowledged => "bg-info",
+                                PoStatus.PartialReceived => "bg-primary",
+                                PoStatus.Received => "bg-primary",
+                                PoStatus.Invoiced => "bg-secondary",
+                                PoStatus.Closed => "bg-dark",
+                                PoStatus.Cancelled => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+                            var statusIcon = po?.Status switch
+                            {
+                                PoStatus.Draft => "ri-draft-line",
+                                PoStatus.Issued => "ri-checkbox-circle-line",
+                                PoStatus.Cancelled => "ri-close-circle-line",
+                                _ => "ri-file-list-line"
+                            };
+                        }
+                        <span class="badge @statusBadgeClass p-3 fs-14 fw-normal">
+                            <i class="@statusIcon me-1"></i> @po?.Status.ToString()
                         </span>
                     </div>
 
@@ -73,7 +95,7 @@
                                     </tr>
                                     <tr>
                                         <th scope="row">PO Date</th>
-                                        <td class="fw-medium">@Model.PoDate?.ToString("dd MMMM yyyy")</td>
+                                        <td class="fw-medium">@po?.PoDate.ToString("dd MMMM yyyy")</td>
                                     </tr>
                                     <tr>
                                         <th scope="row">Requester</th>
@@ -108,7 +130,9 @@
                             </thead>
                             <tbody>
                                 @{ var itemNo = 1; }
-                                @foreach (var item in Model.Items)
+                                @if (po != null)
+                                {
+                                    @foreach (var item in po.Items)
                                 {
                                     <tr>
                                         <td>@itemNo</td>
@@ -116,15 +140,16 @@
                                         <td class="text-muted">@(item.Description ?? "-")</td>
                                         <td class="text-center">@item.Quantity</td>
                                         <td class="text-end">Rp @item.UnitPrice.ToString("N0")</td>
-                                        <td class="text-end fw-medium">Rp @((item.Quantity * item.UnitPrice).ToString("N0"))</td>
+                                        <td class="text-end fw-medium">Rp @item.TotalPrice.ToString("N0")</td>
                                     </tr>
                                     itemNo++;
+                                    }
                                 }
                             </tbody>
                             <tfoot>
                                 <tr class="table-primary">
                                     <td colspan="5" class="text-end fw-bold">TOTAL:</td>
-                                    <td class="text-end fw-bold fs-18">Rp @Model.TotalAmount.ToString("N0")</td>
+                                    <td class="text-end fw-bold fs-18">Rp @(po?.GrandTotal.ToString("N0") ?? "0")</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -139,9 +164,102 @@
                         <a asp-action="Download" asp-route-id="@Model.Id" class="btn btn-primary py-2 px-4 fw-medium fs-16 text-white">
                             <i class="ri-download-line me-1"></i> Download PDF
                         </a>
-                        <a asp-action="Index" class="btn btn-outline-primary py-2 px-4 fw-medium fs-16">
+                        <a asp-action="Index" class="btn btn-outline-secondary py-2 px-4 fw-medium fs-16">
                             <i class="ri-arrow-left-line me-1"></i> Back to List
                         </a>
+                        
+                        @if (po != null && po.Status == PoStatus.Draft)
+                        {
+                            <a asp-action="Edit" asp-route-id="@po.Id" class="btn btn-warning py-2 px-4 fw-medium fs-16 text-white">
+                                <i class="ri-edit-line me-1"></i> Edit PO
+                            </a>
+                            <form asp-action="FinalizeConfirmed" asp-route-id="@po.Id" method="post" class="d-inline" 
+                                  onsubmit="return confirm('Are you sure you want to finalize this PO? Once finalized, it cannot be edited.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success py-2 px-4 fw-medium fs-16 text-white">
+                                    <i class="ri-check-double-line me-1"></i> Finalize PO
+                                </button>
+                            </form>
+                        }
+
+                        @* Status transition buttons based on current status *@
+                        @if (po != null)
+                        {
+                            @* Issued → Acknowledged *@
+                            @if (po.Status == PoStatus.Issued)
+                            {
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Acknowledged" method="post" class="d-inline"
+                                      onsubmit="return confirm('Mark as Acknowledged by vendor?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-info py-2 px-4 fw-medium fs-16 text-white">
+                                        <i class="ri-checkbox-circle-line me-1"></i> Mark Acknowledged
+                                    </button>
+                                </form>
+                            }
+
+                            @* Acknowledged → Partial Received / Received *@
+                            @if (po.Status == PoStatus.Acknowledged)
+                            {
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.PartialReceived" method="post" class="d-inline"
+                                      onsubmit="return confirm('Mark as Partial Received?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-secondary py-2 px-4 fw-medium fs-16 text-white">
+                                        <i class="ri-truck-line me-1"></i> Partial Received
+                                    </button>
+                                </form>
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Received" method="post" class="d-inline"
+                                      onsubmit="return confirm('Mark as Fully Received?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-primary py-2 px-4 fw-medium fs-16 text-white">
+                                        <i class="ri-checkbox-multiple-line me-1"></i> Fully Received
+                                    </button>
+                                </form>
+                            }
+
+                            @* Partial Received → Received *@
+                            @if (po.Status == PoStatus.PartialReceived)
+                            {
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Received" method="post" class="d-inline"
+                                      onsubmit="return confirm('Mark as Fully Received?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-primary py-2 px-4 fw-medium fs-16 text-white">
+                                        <i class="ri-checkbox-multiple-line me-1"></i> Fully Received
+                                    </button>
+                                </form>
+                            }
+
+                            @* Received → Invoiced *@
+                            @if (po.Status == PoStatus.Received)
+                            {
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Invoiced" method="post" class="d-inline"
+                                      onsubmit="return confirm('Mark as Invoiced?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-secondary py-2 px-4 fw-medium fs-16 text-white">
+                                        <i class="ri-file-list-3-line me-1"></i> Mark Invoiced
+                                    </button>
+                                </form>
+                            }
+
+                            @* Invoiced → Closed *@
+                            @if (po.Status == PoStatus.Invoiced)
+                            {
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Closed" method="post" class="d-inline"
+                                      onsubmit="return confirm('Close this PO? This action cannot be undone.');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-dark py-2 px-4 fw-medium fs-16 text-white">
+                                        <i class="ri-lock-line me-1"></i> Close PO
+                                    </button>
+                                </form>
+                            }
+
+                            @* Cancel button for all non-final statuses *@
+                            @if (po.Status != PoStatus.Cancelled && po.Status != PoStatus.Closed)
+                            {
+                                <a asp-action="Cancel" asp-route-id="@po.Id" class="btn btn-outline-danger py-2 px-4 fw-medium fs-16">
+                                    <i class="ri-close-circle-line me-1"></i> Cancel PO
+                                </a>
+                            }
+                        }
                     </div>
                 </div>
             </div>
@@ -219,7 +337,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <span class="fs-14">PO Generated</span>
-                                <small class="d-block text-muted">@Model.PoDate?.ToString("dd MMM yyyy")</small>
+                                <small class="d-block text-muted">@po?.PoDate.ToString("dd MMM yyyy")</small>
                             </div>
                         </div>
                     </div>

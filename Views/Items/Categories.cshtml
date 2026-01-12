@@ -1,0 +1,112 @@
+@using CorpProcure.DTOs.Item
+@model List<ItemCategoryListDto>
+@{
+    ViewData["Title"] = "Kategori Item";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var currentSearch = ViewData["CurrentSearch"] as string;
+    var currentPage = (int)(ViewData["CurrentPage"] ?? 1);
+    var totalPages = (int)(ViewData["TotalPages"] ?? 1);
+}
+
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Kategori Item</h3>
+
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Items" asp-action="Index" class="text-decoration-none">
+                        <span class="text-secondary fw-medium hover">Item Catalog</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">Kategori</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="card bg-white border-0 rounded-3 mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                <a asp-action="CreateCategory" class="btn btn-primary">
+                    <i class="ri-add-line me-1"></i> Tambah Kategori
+                </a>
+                <form method="get" class="d-flex gap-2">
+                    <input type="text" name="search" value="@currentSearch" class="form-control" 
+                           placeholder="Cari kategori..." style="width: 200px;">
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="ri-search-line"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Kode</th>
+                            <th>Nama</th>
+                            <th>Deskripsi</th>
+                            <th>Jumlah Item</th>
+                            <th>Status</th>
+                            <th class="text-end">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="ri-folder-line fs-32 text-muted"></i>
+                                    <p class="text-muted mt-2 mb-0">Belum ada kategori</p>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var cat in Model)
+                            {
+                                <tr>
+                                    <td><span class="badge bg-light text-dark">@cat.Code</span></td>
+                                    <td class="fw-medium">@cat.Name</td>
+                                    <td>@(cat.Description ?? "-")</td>
+                                    <td>@cat.ItemCount item</td>
+                                    <td><span class="badge @cat.StatusBadgeClass">@cat.StatusDisplay</span></td>
+                                    <td class="text-end">
+                                        <a asp-action="EditCategory" asp-route-id="@cat.Id" class="btn btn-sm btn-outline-primary">
+                                            <i class="ri-edit-line"></i>
+                                        </a>
+                                        @if (cat.ItemCount == 0)
+                                        {
+                                            <form asp-action="DeleteCategory" asp-route-id="@cat.Id" method="post" class="d-inline"
+                                                  onsubmit="return confirm('Hapus kategori ini?')">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="ri-delete-bin-line"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Categories"
+                                   asp-route-search="@currentSearch" asp-route-page="@i">@i</a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>

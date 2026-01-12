@@ -380,7 +380,7 @@ public class VendorService : IVendorService
             }
 
             // Check if vendor has POs
-            var hasPOs = await _context.PurchaseRequests
+            var hasPOs = await _context.PurchaseOrders
                 .AnyAsync(pr => pr.VendorId == id && pr.PoNumber != null);
 
             if (hasPOs)

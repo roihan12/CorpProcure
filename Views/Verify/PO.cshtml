@@ -4,6 +4,7 @@
     ViewData["Title"] = "Document Verification";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var verificationCode = ViewData["VerificationCode"]?.ToString();
+    var purchaseOrder = Model.PurchaseOrders.OrderByDescending(po => po.GeneratedAt).FirstOrDefault();
 }
 
 <div class="container py-5">
@@ -26,7 +27,7 @@
                         <div class="row">
                             <div class="col-md-6 text-start">
                                 <small class="text-muted d-block">PO Number</small>
-                                <span class="fw-bold fs-5 text-primary">@Model.PoNumber</span>
+                                <span class="fw-bold fs-5 text-primary">@purchaseOrder?.PoNumber</span>
                             </div>
                             <div class="col-md-6 text-end">
                                 <small class="text-muted d-block">Verification Code</small>
@@ -54,7 +55,7 @@
                                 </tr>
                                 <tr>
                                     <th class="text-muted">PO Date</th>
-                                    <td>@Model.PoDate?.ToString("dd MMMM yyyy")</td>
+                                    <td>@purchaseOrder?.PoDate.ToString("dd MMMM yyyy")</td>
                                 </tr>
                                 <tr>
                                     <th class="text-muted">Requester</th>

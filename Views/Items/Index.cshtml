@@ -1,0 +1,243 @@
+@using CorpProcure.DTOs.Item
+@model List<ItemListDto>
+@{
+    ViewData["Title"] = "Item Catalog";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var currentSearch = ViewData["CurrentSearch"] as string;
+    var currentCategory = ViewData["CurrentCategory"] as Guid?;
+    var currentIsActive = ViewData["CurrentIsActive"] as bool?;
+    var currentPage = (int)(ViewData["CurrentPage"] ?? 1);
+    var totalPages = (int)(ViewData["TotalPages"] ?? 1);
+    var totalItems = (int)(ViewData["TotalItems"] ?? 0);
+}
+
+<div class="main-content-container overflow-hidden">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">Item Catalog</h3>
+
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium hover">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Item Catalog</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="card bg-white border-0 rounded-3 mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                <div class="d-flex gap-2">
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="ri-add-line me-1"></i> Tambah Item
+                    </a>
+                    <a asp-action="Categories" class="btn btn-outline-secondary">
+                        <i class="ri-folder-line me-1"></i> Kategori
+                    </a>
+                </div>
+
+                <form method="get" class="d-flex gap-2 flex-wrap">
+                    <input type="text" name="search" value="@currentSearch" class="form-control" 
+                           placeholder="Cari item..." style="width: 200px;">
+                    <select name="categoryId" class="form-select" style="width: auto;">
+                        <option value="">Semua Kategori</option>
+                        @if (ViewBag.Categories != null)
+                        {
+                            foreach (var item in (Microsoft.AspNetCore.Mvc.Rendering.SelectList)ViewBag.Categories)
+                            {
+                                if (currentCategory.HasValue && currentCategory.Value.ToString() == item.Value)
+                                {
+                                    <option value="@item.Value" selected>@item.Text</option>
+                                }
+                                else
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            }
+                        }
+                    </select>
+                    <select name="isActive" class="form-select" style="width: auto;">
+                        <option value="">Semua Status</option>
+                        <option value="true" selected="@(currentIsActive == true)">Aktif</option>
+                        <option value="false" selected="@(currentIsActive == false)">Non-Aktif</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="ri-search-line"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="default-table-area">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Kode</th>
+                                <th>Nama Item</th>
+                                <th>Kategori</th>
+                                <th>Satuan</th>
+                                <th>Harga Standar</th>
+                                <th>Vendor</th>
+                                <th>Status</th>
+                                <th class="text-end">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <i class="ri-inbox-line fs-32 text-muted"></i>
+                                        <p class="text-muted mt-2 mb-0">Belum ada item</p>
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-light text-dark">@item.Code</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-medium">@item.Name</div>
+                                            @if (!string.IsNullOrEmpty(item.Brand))
+                                            {
+                                                <small class="text-muted">@item.Brand</small>
+                                            }
+                                        </td>
+                                        <td>@item.CategoryName</td>
+                                        <td>@item.UoM</td>
+                                        <td>@item.PriceDisplay</td>
+                                        <td>
+                                            @if (item.VendorCount > 0)
+                                            {
+                                                <span class="badge bg-info">@item.VendorCount vendor</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge @item.StatusBadgeClass">@item.StatusDisplay</span>
+                                            @if (item.IsAssetType)
+                                            {
+                                                <span class="badge bg-warning ms-1">Asset</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="dropdown">
+                                                    <i class="ri-more-2-fill"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" asp-action="Details" asp-route-id="@item.Id">
+                                                            <i class="ri-eye-line me-2"></i> Detail
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" asp-action="Edit" asp-route-id="@item.Id">
+                                                            <i class="ri-edit-line me-2"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <form asp-action="ToggleStatus" asp-route-id="@item.Id" method="post">
+                                                            <button type="submit" class="dropdown-item">
+                                                                <i class="ri-toggle-line me-2"></i>
+                                                                @(item.IsActive ? "Nonaktifkan" : "Aktifkan")
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <button type="button" class="dropdown-item text-danger"
+                                                                data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                                                data-id="@item.Id" data-name="@item.Name">
+                                                            <i class="ri-delete-bin-line me-2"></i> Hapus
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (totalPages > 1)
+                {
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index" 
+                                   asp-route-search="@currentSearch" asp-route-categoryId="@currentCategory"
+                                   asp-route-isActive="@currentIsActive" asp-route-page="@(currentPage - 1)">
+                                    <i class="ri-arrow-left-s-line"></i>
+                                </a>
+                            </li>
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-search="@currentSearch" asp-route-categoryId="@currentCategory"
+                                       asp-route-isActive="@currentIsActive" asp-route-page="@i">@i</a>
+                                </li>
+                            }
+                            <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                                <a class="page-link" asp-action="Index"
+                                   asp-route-search="@currentSearch" asp-route-categoryId="@currentCategory"
+                                   asp-route-isActive="@currentIsActive" asp-route-page="@(currentPage + 1)">
+                                    <i class="ri-arrow-right-s-line"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Konfirmasi Hapus</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Apakah Anda yakin ingin menghapus item <strong id="deleteName"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <form id="deleteForm" asp-action="Delete" method="post" class="d-inline">
+                    <input type="hidden" name="id" id="deleteId" />
+                    <button type="submit" class="btn btn-danger">Hapus</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('deleteModal').addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            document.getElementById('deleteId').value = button.getAttribute('data-id');
+            document.getElementById('deleteName').textContent = button.getAttribute('data-name');
+        });
+    </script>
+}

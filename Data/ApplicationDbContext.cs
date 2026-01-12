@@ -35,6 +35,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
     public DbSet<ApprovalHistory> ApprovalHistories { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<Vendor> Vendors { get; set; }
+    public DbSet<ItemCategory> ItemCategories { get; set; }
+    public DbSet<Item> Items { get; set; }
+    public DbSet<VendorItem> VendorItems { get; set; }
+    public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+    public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -61,6 +66,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
         modelBuilder.Entity<RequestItem>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<ApprovalHistory>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Vendor>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<ItemCategory>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Item>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<VendorItem>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<PurchaseOrder>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<PurchaseOrderItem>().HasQueryFilter(e => !e.IsDeleted);
         // AuditLog tidak perlu soft delete filter - kita ingin bisa query semua audit logs
 
         // Configure relationships dan constraints
@@ -72,6 +82,11 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
         ConfigureApprovalHistoryEntity(modelBuilder);
         ConfigureAuditLogEntity(modelBuilder);
         ConfigureVendorEntity(modelBuilder);
+        ConfigureItemCategoryEntity(modelBuilder);
+        ConfigureItemEntity(modelBuilder);
+        ConfigureVendorItemEntity(modelBuilder);
+        ConfigurePurchaseOrderEntity(modelBuilder);
+        ConfigurePurchaseOrderItemEntity(modelBuilder);
     }
 
     private void ConfigureUserEntity(ModelBuilder modelBuilder)
@@ -139,7 +154,7 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
             entity.HasIndex(e => e.DepartmentId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.CreatedAt);
-            entity.HasIndex(e => e.PoNumber);
+            entity.HasIndex(e => e.CreatedAt);
 
             // Decimal precision
             entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
@@ -169,11 +184,6 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 .WithMany()
                 .HasForeignKey(e => e.RejectedById)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(e => e.Vendor)
-                .WithMany(v => v.PurchaseRequests)
-                .HasForeignKey(e => e.VendorId)
-                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 
@@ -192,6 +202,15 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
                 .WithMany(pr => pr.Items)
                 .HasForeignKey(e => e.PurchaseRequestId)
                 .OnDelete(DeleteBehavior.Cascade); // Cascade delete items when request deleted
+
+            // Item Catalog relationship (optional)
+            entity.HasOne(e => e.Item)
+                .WithMany(i => i.RequestItems)
+                .HasForeignKey(e => e.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Add index for ItemId
+            entity.HasIndex(e => e.ItemId);
         });
     }
 
@@ -253,6 +272,112 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<Guid>, 
             // Decimal precision
             entity.Property(e => e.CreditLimit).HasPrecision(18, 2);
             entity.Property(e => e.TotalOrderValue).HasPrecision(18, 2);
+        });
+    }
+
+    private void ConfigureItemCategoryEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ItemCategory>(entity =>
+        {
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.Name);
+        });
+    }
+
+    private void ConfigureItemEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Item>(entity =>
+        {
+            // Indexes
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.IsAssetType);
+
+            // Decimal precision
+            entity.Property(e => e.StandardPrice).HasPrecision(18, 2);
+
+            // Relationships
+            entity.HasOne(e => e.Category)
+                .WithMany(c => c.Items)
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private void ConfigureVendorItemEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<VendorItem>(entity =>
+        {
+            // Composite index for quick lookup
+            entity.HasIndex(e => new { e.VendorId, e.ItemId });
+            entity.HasIndex(e => e.IsPreferred);
+
+            // Decimal precision
+            entity.Property(e => e.ContractPrice).HasPrecision(18, 2);
+
+            // Relationships
+            entity.HasOne(e => e.Vendor)
+                .WithMany(v => v.VendorItems)
+                .HasForeignKey(e => e.VendorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Item)
+                .WithMany(i => i.VendorItems)
+                .HasForeignKey(e => e.ItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+
+    private void ConfigurePurchaseOrderEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PurchaseOrder>(entity =>
+        {
+            entity.HasIndex(e => e.PoNumber).IsUnique();
+            entity.HasIndex(e => e.PurchaseRequestId);
+            entity.HasIndex(e => e.VendorId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.PoDate);
+
+            entity.Property(e => e.Subtotal).HasPrecision(18, 2);
+            entity.Property(e => e.TaxRate).HasPrecision(18, 4);
+            entity.Property(e => e.TaxAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Discount).HasPrecision(18, 2);
+            entity.Property(e => e.ShippingCost).HasPrecision(18, 2);
+            entity.Property(e => e.GrandTotal).HasPrecision(18, 2);
+
+            entity.HasOne(e => e.PurchaseRequest)
+                .WithMany(pr => pr.PurchaseOrders)
+                .HasForeignKey(e => e.PurchaseRequestId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Vendor)
+                .WithMany(v => v.PurchaseOrders)
+                .HasForeignKey(e => e.VendorId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private void ConfigurePurchaseOrderItemEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PurchaseOrderItem>(entity =>
+        {
+            entity.HasIndex(e => e.PurchaseOrderId);
+            entity.HasIndex(e => e.ItemId);
+
+            entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
+            entity.Property(e => e.TotalPrice).HasPrecision(18, 2);
+
+            entity.HasOne(e => e.PurchaseOrder)
+                .WithMany(po => po.Items)
+                .HasForeignKey(e => e.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Item)
+                .WithMany(i => i.PurchaseOrderItems)
+                .HasForeignKey(e => e.ItemId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 

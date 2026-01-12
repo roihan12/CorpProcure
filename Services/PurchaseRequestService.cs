@@ -86,9 +86,11 @@ public class PurchaseRequestService : IPurchaseRequestService
             {
                 pr.Items.Add(new RequestItem
                 {
+                    ItemId = itemDto.ItemId,
                     ItemName = itemDto.ItemName,
                     Description = itemDto.Description,
                     Quantity = itemDto.Quantity,
+                    Unit = itemDto.Unit,
                     UnitPrice = itemDto.UnitPrice
                 });
             }
@@ -130,7 +132,10 @@ public class PurchaseRequestService : IPurchaseRequestService
                 .Include(p => p.Items)
                 .Include(p => p.ManagerApprover)
                 .Include(p => p.FinanceApprover)
+                .Include(p => p.ManagerApprover)
+                .Include(p => p.FinanceApprover)
                 .Include(p => p.RejectedBy)
+                .Include(p => p.PurchaseOrders) // New
                 .Include(p => p.ApprovalHistories)
                     .ThenInclude(ah => ah.ApproverUser)
                 .FirstOrDefaultAsync(p => p.Id == id);
@@ -155,7 +160,9 @@ public class PurchaseRequestService : IPurchaseRequestService
             var requests = await _context.PurchaseRequests
                 .Include(p => p.Requester)
                 .Include(p => p.Department)
+                .Include(p => p.Department)
                 .Include(p => p.Items)
+                .Include(p => p.PurchaseOrders) // New
                 .Where(p => p.RequesterId == userId && !p.IsDeleted)
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new PurchaseRequestListDto
@@ -188,7 +195,9 @@ public class PurchaseRequestService : IPurchaseRequestService
             var requests = await _context.PurchaseRequests
                 .Include(p => p.Requester)
                 .Include(p => p.Department)
+                .Include(p => p.Department)
                 .Include(p => p.Items)
+                .Include(p => p.PurchaseOrders) // New
                 .Where(p => p.DepartmentId == departmentId && !p.IsDeleted)
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new PurchaseRequestListDto
@@ -227,7 +236,9 @@ public class PurchaseRequestService : IPurchaseRequestService
             IQueryable<Models.PurchaseRequest> query = _context.PurchaseRequests
                 .Include(p => p.Requester)
                 .Include(p => p.Department)
+                .Include(p => p.Department)
                 .Include(p => p.Items)
+                .Include(p => p.PurchaseOrders) // New
                 .Where(p => !p.IsDeleted);
 
             // Filter by approval level
@@ -543,58 +554,13 @@ public class PurchaseRequestService : IPurchaseRequestService
         }
     }
 
+    /* Deprecated - moved to PurchaseOrderService
     public async Task<Result<string>> GeneratePurchaseOrderAsync(Guid requestId, Guid vendorId, Guid userId)
     {
-        try
-        {
-            var pr = await _context.PurchaseRequests.FindAsync(requestId);
-
-            if (pr == null)
-                return Result<string>.Fail("Purchase request not found");
-
-            if (pr.Status != RequestStatus.Approved)
-                return Result<string>.Fail("Only approved requests can generate PO");
-
-            if (!string.IsNullOrEmpty(pr.PoNumber))
-                return Result<string>.Fail("PO already generated");
-
-            // Validate vendor
-            var vendor = await _context.Vendors.FindAsync(vendorId);
-            if (vendor == null)
-                return Result<string>.Fail("Vendor not found");
-
-            if (vendor.Status == Models.Enums.VendorStatus.Blacklisted)
-                return Result<string>.Fail($"Cannot create PO for blacklisted vendor: {vendor.Name}");
-
-            if (vendor.Status != Models.Enums.VendorStatus.Active)
-                return Result<string>.Fail($"Vendor '{vendor.Name}' is not active. Current status: {vendor.Status}");
-
-            // Assign vendor to PR
-            pr.VendorId = vendorId;
-
-            // Update vendor stats
-            vendor.TotalOrders++;
-            vendor.TotalOrderValue += pr.TotalAmount;
-
-            // Generate PO number
-            var poNumber = await _numberGenerator.GeneratePurchaseOrderNumberAsync();
-            pr.PoNumber = poNumber;
-            pr.GeneratePoNumber();
-
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation(
-                "PO {PoNumber} generated for purchase request {RequestId} with vendor {VendorId}",
-                poNumber, requestId, vendorId);
-
-            return Result<string>.Ok(poNumber);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating PO for request {RequestId}", requestId);
-            return Result<string>.Fail("An error occurred while generating the purchase order");
-        }
+        // ... Logic moved to PurchaseOrderService ...
+        return Result<string>.Fail("Deprecated. Use PurchaseOrderService.GenerateAsync");
     }
+    */
 
     // Helper method to map entity to DTO
     private PurchaseRequestDto MapToDto(Models.PurchaseRequest pr)
@@ -622,8 +588,8 @@ public class PurchaseRequestService : IPurchaseRequestService
             RejectedByName = pr.RejectedBy?.FullName,
             RejectedDate = pr.RejectedDate,
             RejectionReason = pr.RejectionReason,
-            PoNumber = pr.PoNumber,
-            PoDate = pr.PoDate,
+            PoNumber = pr.PurchaseOrders.OrderByDescending(po => po.GeneratedAt).FirstOrDefault()?.PoNumber,
+            PoDate = pr.PurchaseOrders.OrderByDescending(po => po.GeneratedAt).FirstOrDefault()?.PoDate,
             Items = pr.Items.Select(i => new RequestItemDetailDto
             {
                 Id = i.Id,

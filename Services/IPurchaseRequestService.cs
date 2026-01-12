@@ -59,10 +59,7 @@ namespace CorpProcure.Services
         /// </summary>
         Task<Result> CancelAsync(Guid requestId, Guid userId);
 
-        /// <summary>
-        /// Generate PO from approved request
-        /// </summary>
-        Task<Result<string>> GeneratePurchaseOrderAsync(Guid requestId, Guid vendorId, Guid userId);
+
     }
 
 }

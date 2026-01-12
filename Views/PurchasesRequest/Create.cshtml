@@ -72,21 +72,35 @@
                             <div class="item-row border rounded-3 p-3 mb-3" data-index="0">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h6 class="mb-0">Item #1</h6>
-                                    <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" style="display: none;">
-                                        <i class="ri-delete-bin-line"></i>
-                                    </button>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input catalog-checkbox" type="checkbox" id="catalogSwitch0">
+                                            <label class="form-check-label small" for="catalogSwitch0">From Catalog</label>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn" style="display: none;">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
                                 </div>
+                                <input type="hidden" name="Items[0].ItemId" class="item-id" />
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
                                             <label class="label text-secondary">Item Name <span class="text-danger">*</span></label>
-                                            <input type="text" name="Items[0].ItemName" class="form-control" placeholder="e.g., Laptop Dell XPS 15" required />
+                                            
+                                            <!-- Custom Input -->
+                                            <input type="text" name="Items[0].ItemName" class="form-control item-name-input" placeholder="e.g., Laptop Dell XPS 15" required />
+                                            
+                                            <!-- Catalog Select -->
+                                            <select class="form-select item-select" style="display:none;">
+                                                <option value="">-- Loading --</option>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
                                             <label class="label text-secondary">Description</label>
-                                            <input type="text" name="Items[0].Description" class="form-control" placeholder="Specifications or details" />
+                                            <input type="text" name="Items[0].Description" class="form-control item-desc" placeholder="Specifications or details" />
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -98,12 +112,14 @@
                                     <div class="col-md-3">
                                         <div class="form-group mb-3">
                                             <label class="label text-secondary">Unit</label>
-                                            <select name="Items[0].Unit" class="form-select">
+                                            <select name="Items[0].Unit" class="form-select item-unit">
                                                 <option value="pcs">Pcs</option>
                                                 <option value="unit">Unit</option>
                                                 <option value="box">Box</option>
                                                 <option value="set">Set</option>
                                                 <option value="pack">Pack</option>
+                                                <option value="kg">Kg</option>
+                                                <option value="ltr">Ltr</option>
                                             </select>
                                         </div>
                                     </div>
@@ -191,6 +207,17 @@
     <script>
         $(document).ready(function() {
             let itemIndex = 0;
+            let catalogItems = [];
+
+            // Fetch catalog items on load
+            $.get('@Url.Action("GetCatalogItems", "PurchasesRequest")', function(response) {
+                if (response.success) {
+                    catalogItems = response.data;
+                    initializeRows();
+                } else {
+                    console.error('Failed to load catalog items:', response.message);
+                }
+            });
             
             function formatCurrency(amount) {
                 return 'Rp ' + amount.toLocaleString('id-ID');
@@ -230,11 +257,37 @@
                     $(this).find('input, select').each(function() {
                         const name = $(this).attr('name');
                         if (name) {
-                            $(this).attr('name', name.replace(/\[\d+\]/, '[' + index + ']'));
+                            $(this).attr('name', name.replace(/Items\[\d+\]/, 'Items[' + index + ']'));
                         }
                     });
                 });
                 itemIndex = $('.item-row').length - 1;
+            }
+
+            // Populate select options
+            function getCatalogOptionsHtml() {
+                let options = '<option value="">-- Select Item --</option>';
+                catalogItems.forEach(item => {
+                    options += `<option value="${item.id}" 
+                        data-price="${item.standardPrice}" 
+                        data-unit="${item.uoM}" 
+                        data-name="${item.name}">${item.code} - ${item.name}</option>`;
+                });
+                return options;
+            }
+
+            function initializeRows() {
+                // Initialize existing rows (if any)
+                $('.item-row').each(function() {
+                    const row = $(this);
+                    const checkbox = row.find('.catalog-checkbox');
+                    if (catalogItems.length > 0) {
+                        const select = row.find('.item-select');
+                        if (select.children().length <= 1) { // Only if not already populated
+                             select.html(getCatalogOptionsHtml());
+                        }
+                    }
+                });
             }
             
             // Add new item
@@ -244,21 +297,35 @@
                     <div class="item-row border rounded-3 p-3 mb-3" data-index="${itemIndex}">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6 class="mb-0">Item #${itemIndex + 1}</h6>
-                            <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input catalog-checkbox" type="checkbox" id="catalogSwitch${itemIndex}">
+                                    <label class="form-check-label small" for="catalogSwitch${itemIndex}">From Catalog</label>
+                                </div>
+                                <button type="button" class="btn btn-outline-danger btn-sm remove-item-btn">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
                         </div>
+                        <input type="hidden" name="Items[${itemIndex}].ItemId" class="item-id" />
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label class="label text-secondary">Item Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="Items[${itemIndex}].ItemName" class="form-control" placeholder="e.g., Laptop Dell XPS 15" required />
+                                    
+                                    <!-- Custom Input -->
+                                    <input type="text" name="Items[${itemIndex}].ItemName" class="form-control item-name-input" placeholder="e.g., Laptop Dell XPS 15" required />
+                                    
+                                    <!-- Catalog Select -->
+                                    <select class="form-select item-select" style="display:none;">
+                                        ${getCatalogOptionsHtml()}
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label class="label text-secondary">Description</label>
-                                    <input type="text" name="Items[${itemIndex}].Description" class="form-control" placeholder="Specifications or details" />
+                                    <input type="text" name="Items[${itemIndex}].Description" class="form-control item-desc" placeholder="Specifications or details" />
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -270,12 +337,14 @@
                             <div class="col-md-3">
                                 <div class="form-group mb-3">
                                     <label class="label text-secondary">Unit</label>
-                                    <select name="Items[${itemIndex}].Unit" class="form-select">
+                                    <select name="Items[${itemIndex}].Unit" class="form-select item-unit">
                                         <option value="pcs">Pcs</option>
                                         <option value="unit">Unit</option>
                                         <option value="box">Box</option>
                                         <option value="set">Set</option>
                                         <option value="pack">Pack</option>
+                                        <option value="kg">Kg</option>
+                                        <option value="ltr">Ltr</option>
                                     </select>
                                 </div>
                             </div>
@@ -310,6 +379,63 @@
             $(document).on('input', '.item-quantity, .item-price', function() {
                 calculateGrandTotal();
             });
+
+            // Handle Catalog Switch
+            $(document).on('change', '.catalog-checkbox', function() {
+                const row = $(this).closest('.item-row');
+                const isCatalog = $(this).is(':checked');
+                const nameInput = row.find('.item-name-input');
+                const select = row.find('.item-select');
+                const priceInput = row.find('.item-price');
+                const unitSelect = row.find('.item-unit');
+                const itemIdInput = row.find('.item-id');
+
+                if (isCatalog) {
+                    nameInput.hide();
+                    select.show();
+                    // Reset fields
+                    itemIdInput.val('');
+                    priceInput.prop('readonly', true);
+                    // unitSelect.prop('disabled', true); // Maybe keep unit editable? Let's disable for now if strict catalog
+                } else {
+                    nameInput.show().val('').prop('readonly', false);
+                    select.hide().val('');
+                    itemIdInput.val('');
+                    priceInput.prop('readonly', false).val('');
+                    unitSelect.prop('disabled', false);
+                    row.find('.item-subtotal').val('Rp 0');
+                }
+            });
+
+            // Handle Catalog Item Selection
+            $(document).on('change', '.item-select', function() {
+                const row = $(this).closest('.item-row');
+                const selectedOption = $(this).find('option:selected');
+                const itemId = $(this).val();
+                
+                if (itemId) {
+                    const name = selectedOption.data('name');
+                    const price = selectedOption.data('price');
+                    const unit = selectedOption.data('unit');
+
+                    row.find('.item-id').val(itemId);
+                    row.find('.item-name-input').val(name); // Hidden input holds the name
+                    row.find('.item-price').val(price);
+                    
+                    // Set unit if valid, otherwise keep default or add option?
+                    // Ideally check if value exists, if not add it or alert.
+                    // For now assuming standard units.
+                   
+                    // Try to set unit, if simpler just set val
+                    row.find('.item-unit').val(unit.toLowerCase()); 
+
+                    calculateGrandTotal();
+                } else {
+                    row.find('.item-id').val('');
+                    row.find('.item-name-input').val('');
+                    row.find('.item-price').val('');
+                }
+            });
             
             // Initial calculation
             calculateGrandTotal();
@@ -339,6 +465,9 @@
                     alert('Please fill in all required fields for at least one item.');
                     return false;
                 }
+
+                // Enable disabled fields before submit so values are sent
+                $('.item-unit').prop('disabled', false);
                 
                 return true;
             });

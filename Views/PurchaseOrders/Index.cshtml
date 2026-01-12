@@ -123,7 +123,7 @@
                                         {
                                             <td>
                                                 <span class="badge bg-success bg-opacity-10 text-success p-2 fs-12 fw-normal">
-                                                    @item.PoNumber
+                                                    @item.PurchaseOrders.OrderByDescending(po => po.GeneratedAt).FirstOrDefault()?.PoNumber
                                                 </span>
                                             </td>
                                         }
@@ -133,15 +133,21 @@
                                         <td>@item.FinanceApprovalDate?.ToString("dd MMM yyyy")</td>
                                         @if (currentTab == "completed")
                                         {
-                                            <td>@item.PoDate?.ToString("dd MMM yyyy")</td>
+                                            <td>@item.PurchaseOrders.OrderByDescending(po => po.GeneratedAt).FirstOrDefault()?.PoDate.ToString("dd MMM yyyy")</td>
                                         }
                                         <td class="text-end">
                                             @if (currentTab == "pending")
                                             {
-                                                <a asp-action="Generate" asp-route-id="@item.Id" 
-                                                   class="btn btn-success btn-sm py-1 px-3">
-                                                    <i class="ri-file-add-line me-1"></i> Generate PO
-                                                </a>
+                                                <div class="btn-group">
+                                                    <a asp-controller="PurchasesRequest" asp-action="Details" asp-route-id="@item.Id" 
+                                                       class="btn btn-outline-info btn-sm py-1 px-2" title="View PR Details">
+                                                        <i class="ri-eye-line"></i>
+                                                    </a>
+                                                    <a asp-action="Generate" asp-route-id="@item.Id" 
+                                                       class="btn btn-success btn-sm py-1 px-3">
+                                                        <i class="ri-file-add-line me-1"></i> Generate PO
+                                                    </a>
+                                                </div>
                                             }
                                             else
                                             {

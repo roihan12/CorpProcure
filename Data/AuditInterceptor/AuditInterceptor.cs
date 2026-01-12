@@ -85,7 +85,15 @@ public class AuditInterceptor : SaveChangesInterceptor
                     break;
 
                 case EntityState.Deleted:
-                    // Implement soft delete
+                    // Skip soft-delete for PurchaseOrderItem - these should be hard deleted
+                    // to avoid concurrency issues when updating PO items
+                    if (entry.Entity is PurchaseOrderItem)
+                    {
+                        // Let it remain as Deleted state for hard delete
+                        break;
+                    }
+                    
+                    // Implement soft delete for other entities
                     entry.State = EntityState.Modified;
                     entry.Entity.IsDeleted = true;
                     entry.Entity.DeletedAt = utcNow;
