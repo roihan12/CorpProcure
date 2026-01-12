@@ -543,8 +543,45 @@
     </div>
 </div>
 
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fs-18 fw-bold">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3 pb-4">
+                <p id="confirmationMessage" class="fs-15 mb-0 text-secondary"></p>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light fw-medium px-4" data-bs-dismiss="modal">No, Cancel</button>
+                <button type="button" class="btn btn-primary fw-medium text-white px-4" id="confirmActionBtn">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
+    let confirmModal;
+    let onConfirm = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        confirmModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        
+        document.getElementById('confirmActionBtn').addEventListener('click', function() {
+            if (onConfirm) onConfirm();
+            confirmModal.hide();
+        });
+    });
+
+    function showConfirm(message, callback) {
+        document.getElementById('confirmationMessage').textContent = message;
+        onConfirm = callback;
+        confirmModal.show();
+    }
+
 $(document).ready(function() {
     const vendorId = '@Model.Id';
     const antiForgeryToken = $('input[name="__RequestVerificationToken"]').val();
@@ -767,22 +804,22 @@ $(document).ready(function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
         
-        if (!confirm('Delete contract for "' + name + '"?')) return;
-        
-        $.ajax({
-            url: '@Url.Action("DeleteVendorItem", "Vendors")?id=' + id,
-            type: 'POST',
-            headers: { 'RequestVerificationToken': antiForgeryToken },
-            success: function(response) {
-                if (response.success) {
-                    loadVendorItems();
-                } else {
-                    alert(response.message);
+        showConfirm('Delete contract for "' + name + '"?', function() {
+            $.ajax({
+                url: '@Url.Action("DeleteVendorItem", "Vendors")?id=' + id,
+                type: 'POST',
+                headers: { 'RequestVerificationToken': antiForgeryToken },
+                success: function(response) {
+                    if (response.success) {
+                        loadVendorItems();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error deleting item');
                 }
-            },
-            error: function() {
-                alert('Error deleting item');
-            }
+            });
         });
     });
 });

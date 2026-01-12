@@ -70,6 +70,8 @@ public class PurchaseRequestDto
 public class RequestItemDetailDto
 {
     public Guid Id { get; set; }
+    
+    public Guid? CatalogItemId { get; set; }
 
     public string ItemName { get; set; } = string.Empty;
 

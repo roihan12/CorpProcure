@@ -349,6 +349,54 @@ public class ItemService : IItemService
         }
     }
 
+    public async Task<Result<(List<ItemDropdownDto> Items, bool HasMore)>> SearchItemsForDropdownAsync(
+        string? term = null, int page = 1, int pageSize = 20)
+    {
+        try
+        {
+            var query = _context.Items
+                .Include(i => i.Category)
+                .Where(i => i.IsActive);
+
+            // Apply search filter if term provided
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var searchTerm = term.ToLower();
+                query = query.Where(i =>
+                    i.Name.ToLower().Contains(searchTerm) ||
+                    i.Code.ToLower().Contains(searchTerm) ||
+                    (i.Description != null && i.Description.ToLower().Contains(searchTerm)) ||
+                    (i.Brand != null && i.Brand.ToLower().Contains(searchTerm)));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(i => i.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(i => new ItemDropdownDto
+                {
+                    Id = i.Id,
+                    Code = i.Code,
+                    Name = i.Name,
+                    UoM = i.UoM,
+                    StandardPrice = i.StandardPrice,
+                    CategoryName = i.Category.Name
+                })
+                .ToListAsync();
+
+            var hasMore = (page * pageSize) < totalCount;
+
+            return Result<(List<ItemDropdownDto>, bool)>.Ok((items, hasMore));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching items for dropdown");
+            return Result<(List<ItemDropdownDto>, bool)>.Fail("Error searching items");
+        }
+    }
+
     public async Task<Result<Guid>> CreateItemAsync(CreateItemDto dto, Guid userId)
     {
         try

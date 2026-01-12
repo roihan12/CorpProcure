@@ -323,7 +323,9 @@ public class PurchaseRequestService : IPurchaseRequestService
                     ItemName = itemDto.ItemName,
                     Description = itemDto.Description,
                     Quantity = itemDto.Quantity,
-                    UnitPrice = itemDto.UnitPrice
+                    Unit = itemDto.Unit,
+                    UnitPrice = itemDto.UnitPrice,
+                    ItemId = itemDto.ItemId
                 });
             }
 
@@ -569,6 +571,7 @@ public class PurchaseRequestService : IPurchaseRequestService
         {
             var pr = await _context.PurchaseRequests
                 .Include(p => p.Department)
+                .Include(p => p.Items)
                 .FirstOrDefaultAsync(p => p.Id == requestId);
 
             if (pr == null)
@@ -620,13 +623,6 @@ public class PurchaseRequestService : IPurchaseRequestService
         }
     }
 
-    /* Deprecated - moved to PurchaseOrderService
-    public async Task<Result<string>> GeneratePurchaseOrderAsync(Guid requestId, Guid vendorId, Guid userId)
-    {
-        // ... Logic moved to PurchaseOrderService ...
-        return Result<string>.Fail("Deprecated. Use PurchaseOrderService.GenerateAsync");
-    }
-    */
 
     // Helper method to map entity to DTO
     private PurchaseRequestDto MapToDto(Models.PurchaseRequest pr)
@@ -659,6 +655,7 @@ public class PurchaseRequestService : IPurchaseRequestService
             Items = pr.Items.Select(i => new RequestItemDetailDto
             {
                 Id = i.Id,
+                CatalogItemId = i.ItemId,
                 ItemName = i.ItemName,
                 Description = i.Description,
                 Quantity = i.Quantity,

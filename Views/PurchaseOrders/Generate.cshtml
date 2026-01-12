@@ -211,19 +211,59 @@
 
                 <!-- Actions -->
                 <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary py-2 fw-medium">
+                    <button type="button" class="btn btn-primary py-2 fw-medium" id="generateBtn">
                         <i class="ri-file-text-line me-1"></i> Generate Draft PO
                     </button>
-                    <a asp-action="Index" class="btn btn-outline-secondary py-2 fw-medium">Cancel</a>
+                    <button type="button" class="btn btn-outline-secondary py-2 fw-medium" 
+                            onclick="showConfirm('Are you sure you want to discard your changes?', () => window.location.href='@Url.Action("Index")')">
+                        Cancel
+                    </button>
                 </div>
             </div>
         </div>
     </form>
 </div>
 
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fs-18 fw-bold">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3 pb-4">
+                <p id="confirmationMessage" class="fs-15 mb-0 text-secondary"></p>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light fw-medium px-4" data-bs-dismiss="modal">No, Cancel</button>
+                <button type="button" class="btn btn-primary fw-medium text-white px-4" id="confirmActionBtn">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        let confirmModal;
+        let onConfirm = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            confirmModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            
+            document.getElementById('confirmActionBtn').addEventListener('click', function() {
+                if (onConfirm) onConfirm();
+                confirmModal.hide();
+            });
+        });
+
+        function showConfirm(message, callback) {
+            document.getElementById('confirmationMessage').textContent = message;
+            onConfirm = callback;
+            confirmModal.show();
+        }
+
         $(document).ready(function() {
             function formatCurrency(amount) {
                 return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -267,12 +307,25 @@
             // Initial calculation
             calculateTotals();
 
-            // Prevent double submission
-            $('#poForm').on('submit', function() {
-                if ($(this).valid()) {
-                    var btn = $(this).find('button[type="submit"]');
-                    btn.prop('disabled', true);
-                    btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
+            // Handle Generate Button
+            $('#generateBtn').click(function() {
+                if ($('#poForm').valid()) {
+                    showConfirm('Generate Purchase Order?', function() {
+                        const form = $('#poForm');
+                        const btn = $('#generateBtn');
+                        
+                        // Show loading state
+                        btn.prop('disabled', true);
+                        btn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
+                        
+                        // Submit logic is handled by standard form submission after valid check
+                        // But since we are inside a callback, we need to bypass 'click' and submit directly
+                        // Or trigger native submit
+                        form[0].submit();
+                    });
+                } else {
+                     // Trigger validation messages
+                    $('#poForm').validate().focusInvalid();
                 }
             });
         });

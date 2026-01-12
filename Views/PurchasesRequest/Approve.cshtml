@@ -197,7 +197,7 @@
                                             <span>Back</span>
                                         </span>
                                     </a>
-                                    <button type="submit" class="btn btn-primary py-1 px-4 fs-14 fw-medium rounded-3" id="submitBtn">
+                                    <button type="button" class="btn btn-primary py-1 px-4 fs-14 fw-medium rounded-3" id="submitBtn">
                                         <span class="py-1 d-block">
                                             <i class="material-symbols-outlined fs-18 align-middle me-1">send</i>
                                             <span>Submit Decision</span>
@@ -213,9 +213,30 @@
     </div>
 </div>
 
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fs-18 fw-bold">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3 pb-4">
+                <p id="confirmationMessage" class="fs-15 mb-0 text-secondary"></p>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light fw-medium px-4" data-bs-dismiss="modal">No, Cancel</button>
+                <button type="button" class="btn btn-primary fw-medium text-white px-4" id="confirmActionBtn">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(document).ready(function() {
+            var confirmModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            
             $('input[name="action"]').change(function() {
                 if ($(this).val() === 'reject') {
                     $('#warningApprove').addClass('d-none');
@@ -230,26 +251,29 @@
                 }
             });
             
-            $('form').submit(function(e) {
+            $('#submitBtn').click(function(e) {
                 const action = $('input[name="action"]:checked').val();
                 const notes = $('#notes').val().trim();
                 
                 if (action === 'reject' && !notes) {
-                    e.preventDefault();
                     alert('Please provide a reason for rejection.');
-                    return false;
+                    $('#notes').focus();
+                    return;
                 }
                 
                 const confirmMsg = action === 'approve' 
                     ? 'Are you sure you want to approve this request?' 
-                    : 'Are you sure you want to reject this request?';
+                    : 'Are you sure you want to reject this request? This action cannot be undone.';
                     
-                if (!confirm(confirmMsg)) {
-                    e.preventDefault();
-                    return false;
-                }
+                $('#confirmationMessage').text(confirmMsg);
                 
-                return true;
+                // Set confirm action
+                $('#confirmActionBtn').off('click').on('click', function() {
+                    $('form').submit();
+                    confirmModal.hide();
+                });
+                
+                confirmModal.show();
             });
         });
     </script>

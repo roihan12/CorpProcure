@@ -63,6 +63,12 @@ public interface IItemService
     Task<Result<List<ItemDropdownDto>>> GetItemsForDropdownAsync(Guid? categoryId = null);
 
     /// <summary>
+    /// Search items for dropdown with pagination (for Select2 AJAX)
+    /// </summary>
+    Task<Result<(List<ItemDropdownDto> Items, bool HasMore)>> SearchItemsForDropdownAsync(
+        string? term = null, int page = 1, int pageSize = 20);
+
+    /// <summary>
     /// Create new item
     /// </summary>
     Task<Result<Guid>> CreateItemAsync(CreateItemDto dto, Guid userId);

@@ -89,6 +89,33 @@ namespace CorpProcure.Controllers
             return Json(new { success = true, data = result.Data });
         }
 
+        // GET: PurchasesRequest/SearchCatalogItems?term=laptop&page=1
+        [HttpGet]
+        public async Task<IActionResult> SearchCatalogItems(string? term, int page = 1, int pageSize = 20)
+        {
+            var result = await _itemService.SearchItemsForDropdownAsync(term, page, pageSize);
+            
+            if (!result.Success)
+            {
+                return Json(new { results = new object[0], pagination = new { more = false } });
+            }
+
+            // Format for Select2
+            return Json(new
+            {
+                results = result.Data.Items.Select(i => new
+                {
+                    id = i.Id,
+                    text = $"{i.Code} - {i.Name}",
+                    code = i.Code,
+                    name = i.Name,
+                    price = i.StandardPrice,
+                    unit = i.UoM
+                }),
+                pagination = new { more = result.Data.HasMore }
+            });
+        }
+
         // POST: PurchasesRequest/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -186,7 +213,7 @@ namespace CorpProcure.Controllers
                 Justification = pr.Justification ?? pr.Description,
                 Items = pr.Items.Select(i => new RequestItemDto
                 {
-                    ItemId = null, // We don't have ItemId in the detail response
+                    ItemId = i.CatalogItemId,
                     ItemName = i.ItemName,
                     Description = i.Description,
                     Quantity = i.Quantity,
@@ -194,6 +221,8 @@ namespace CorpProcure.Controllers
                     UnitPrice = i.UnitPrice
                 }).ToList()
             };
+
+            Console.WriteLine("Ini Get DTO", dto);
 
             return View(dto);
         }
@@ -530,7 +559,7 @@ namespace CorpProcure.Controllers
 
             var fileUploadService = HttpContext.RequestServices.GetRequiredService<IFileUploadService>();
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            
+
             var result = await fileUploadService.UploadAsync(file, purchaseRequestId, type, description, userId);
 
             if (!result.Success)
@@ -538,8 +567,9 @@ namespace CorpProcure.Controllers
                 return Json(new { success = false, message = result.ErrorMessage });
             }
 
-            return Json(new { 
-                success = true, 
+            return Json(new
+            {
+                success = true,
                 attachment = new
                 {
                     result.Data!.Id,
@@ -556,7 +586,7 @@ namespace CorpProcure.Controllers
         {
             var fileUploadService = HttpContext.RequestServices.GetRequiredService<IFileUploadService>();
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            
+
             var result = await fileUploadService.DeleteAsync(id, userId);
 
             if (!result.Success)

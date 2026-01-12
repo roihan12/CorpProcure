@@ -173,10 +173,10 @@
                             <a asp-action="Edit" asp-route-id="@po.Id" class="btn btn-warning py-2 px-4 fw-medium fs-16 text-white">
                                 <i class="ri-edit-line me-1"></i> Edit PO
                             </a>
-                            <form asp-action="FinalizeConfirmed" asp-route-id="@po.Id" method="post" class="d-inline" 
-                                  onsubmit="return confirm('Are you sure you want to finalize this PO? Once finalized, it cannot be edited.');">
+                            <form asp-action="FinalizeConfirmed" asp-route-id="@po.Id" method="post" class="d-inline" id="finalizeForm">
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-success py-2 px-4 fw-medium fs-16 text-white">
+                                <button type="button" class="btn btn-success py-2 px-4 fw-medium fs-16 text-white"
+                                        onclick="showConfirm('Are you sure you want to finalize this PO? Once finalized, it cannot be edited.', () => document.getElementById('finalizeForm').submit())">
                                     <i class="ri-check-double-line me-1"></i> Finalize PO
                                 </button>
                             </form>
@@ -188,10 +188,10 @@
                             @* Issued → Acknowledged *@
                             @if (po.Status == PoStatus.Issued)
                             {
-                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Acknowledged" method="post" class="d-inline"
-                                      onsubmit="return confirm('Mark as Acknowledged by vendor?');">
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Acknowledged" method="post" class="d-inline" id="ackForm">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-info py-2 px-4 fw-medium fs-16 text-white">
+                                    <button type="button" class="btn btn-info py-2 px-4 fw-medium fs-16 text-white"
+                                            onclick="showConfirm('Mark as Acknowledged by vendor?', () => document.getElementById('ackForm').submit())">
                                         <i class="ri-checkbox-circle-line me-1"></i> Mark Acknowledged
                                     </button>
                                 </form>
@@ -200,17 +200,17 @@
                             @* Acknowledged → Partial Received / Received *@
                             @if (po.Status == PoStatus.Acknowledged)
                             {
-                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.PartialReceived" method="post" class="d-inline"
-                                      onsubmit="return confirm('Mark as Partial Received?');">
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.PartialReceived" method="post" class="d-inline" id="partialForm">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-secondary py-2 px-4 fw-medium fs-16 text-white">
+                                    <button type="button" class="btn btn-secondary py-2 px-4 fw-medium fs-16 text-white"
+                                            onclick="showConfirm('Mark as Partial Received?', () => document.getElementById('partialForm').submit())">
                                         <i class="ri-truck-line me-1"></i> Partial Received
                                     </button>
                                 </form>
-                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Received" method="post" class="d-inline"
-                                      onsubmit="return confirm('Mark as Fully Received?');">
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Received" method="post" class="d-inline" id="fullRecForm1">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-primary py-2 px-4 fw-medium fs-16 text-white">
+                                    <button type="button" class="btn btn-primary py-2 px-4 fw-medium fs-16 text-white"
+                                            onclick="showConfirm('Mark as Fully Received?', () => document.getElementById('fullRecForm1').submit())">
                                         <i class="ri-checkbox-multiple-line me-1"></i> Fully Received
                                     </button>
                                 </form>
@@ -219,10 +219,10 @@
                             @* Partial Received → Received *@
                             @if (po.Status == PoStatus.PartialReceived)
                             {
-                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Received" method="post" class="d-inline"
-                                      onsubmit="return confirm('Mark as Fully Received?');">
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Received" method="post" class="d-inline" id="fullRecForm2">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-primary py-2 px-4 fw-medium fs-16 text-white">
+                                    <button type="button" class="btn btn-primary py-2 px-4 fw-medium fs-16 text-white"
+                                            onclick="showConfirm('Mark as Fully Received?', () => document.getElementById('fullRecForm2').submit())">
                                         <i class="ri-checkbox-multiple-line me-1"></i> Fully Received
                                     </button>
                                 </form>
@@ -231,10 +231,10 @@
                             @* Received → Invoiced *@
                             @if (po.Status == PoStatus.Received)
                             {
-                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Invoiced" method="post" class="d-inline"
-                                      onsubmit="return confirm('Mark as Invoiced?');">
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Invoiced" method="post" class="d-inline" id="invoiceForm">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-secondary py-2 px-4 fw-medium fs-16 text-white">
+                                    <button type="button" class="btn btn-secondary py-2 px-4 fw-medium fs-16 text-white"
+                                            onclick="showConfirm('Mark as Invoiced?', () => document.getElementById('invoiceForm').submit())">
                                         <i class="ri-file-list-3-line me-1"></i> Mark Invoiced
                                     </button>
                                 </form>
@@ -243,10 +243,10 @@
                             @* Invoiced → Closed *@
                             @if (po.Status == PoStatus.Invoiced)
                             {
-                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Closed" method="post" class="d-inline"
-                                      onsubmit="return confirm('Close this PO? This action cannot be undone.');">
+                                <form asp-action="UpdateStatus" asp-route-id="@po.Id" asp-route-status="@PoStatus.Closed" method="post" class="d-inline" id="closeForm">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-dark py-2 px-4 fw-medium fs-16 text-white">
+                                    <button type="button" class="btn btn-dark py-2 px-4 fw-medium fs-16 text-white"
+                                            onclick="showConfirm('Close this PO? This action cannot be undone.', () => document.getElementById('closeForm').submit())">
                                         <i class="ri-lock-line me-1"></i> Close PO
                                     </button>
                                 </form>
@@ -255,9 +255,10 @@
                             @* Cancel button for all non-final statuses *@
                             @if (po.Status != PoStatus.Cancelled && po.Status != PoStatus.Closed)
                             {
-                                <a asp-action="Cancel" asp-route-id="@po.Id" class="btn btn-outline-danger py-2 px-4 fw-medium fs-16">
+                                <button type="button" class="btn btn-outline-danger py-2 px-4 fw-medium fs-16" 
+                                        onclick="showConfirm('Cancel this Purchase Order? This action cannot be undone.', () => window.location.href='@Url.Action("Cancel", new { id = po.Id })')">
                                     <i class="ri-close-circle-line me-1"></i> Cancel PO
-                                </a>
+                                </button>
                             }
                         }
                     </div>
@@ -414,8 +415,45 @@
     </div>
 </div>
 
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fs-18 fw-bold">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3 pb-4">
+                <p id="confirmationMessage" class="fs-15 mb-0 text-secondary"></p>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light fw-medium px-4" data-bs-dismiss="modal">No, Cancel</button>
+                <button type="button" class="btn btn-primary fw-medium text-white px-4" id="confirmActionBtn">Yes, Proceed</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
+    let confirmModal;
+    let onConfirm = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        confirmModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        
+        document.getElementById('confirmActionBtn').addEventListener('click', function() {
+            if (onConfirm) onConfirm();
+            confirmModal.hide();
+        });
+    });
+
+    function showConfirm(message, callback) {
+        document.getElementById('confirmationMessage').textContent = message;
+        onConfirm = callback;
+        confirmModal.show();
+    }
+
 $(document).ready(function() {
     const poId = '@po?.Id';
     const canEdit = @((po != null && po.Status != PoStatus.Cancelled && po.Status != PoStatus.Closed).ToString().ToLower());
@@ -525,22 +563,22 @@ $(document).ready(function() {
         const id = $(this).data('id');
         const name = $(this).data('name');
         
-        if (!confirm('Delete "' + name + '"?')) return;
-        
-        $.ajax({
-            url: '@Url.Action("DeleteAttachment", "PurchaseOrders")?id=' + id,
-            type: 'POST',
-            headers: { 'RequestVerificationToken': antiForgeryToken },
-            success: function(response) {
-                if (response.success) {
-                    loadAttachments();
-                } else {
-                    alert(response.message);
+        showConfirm('Delete "' + name + '"?', function() {
+            $.ajax({
+                url: '@Url.Action("DeleteAttachment", "PurchaseOrders")?id=' + id,
+                type: 'POST',
+                headers: { 'RequestVerificationToken': antiForgeryToken },
+                success: function(response) {
+                    if (response.success) {
+                        loadAttachments();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error deleting attachment');
                 }
-            },
-            error: function() {
-                alert('Error deleting attachment');
-            }
+            });
         });
     });
 });

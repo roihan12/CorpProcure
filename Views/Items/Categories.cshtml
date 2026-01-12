@@ -78,9 +78,9 @@
                                         </a>
                                         @if (cat.ItemCount == 0)
                                         {
-                                            <form asp-action="DeleteCategory" asp-route-id="@cat.Id" method="post" class="d-inline"
-                                                  onsubmit="return confirm('Hapus kategori ini?')">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <form asp-action="DeleteCategory" asp-route-id="@cat.Id" method="post" class="d-inline" id="deleteForm-@cat.Id">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="showConfirm('Hapus kategori ini?', () => document.getElementById('deleteForm-@cat.Id').submit())">
                                                     <i class="ri-delete-bin-line"></i>
                                                 </button>
                                             </form>
@@ -110,3 +110,44 @@
         </div>
     </div>
 </div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fs-18 fw-bold">Konfirmasi Tindakan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-3 pb-4">
+                <p id="confirmationMessage" class="fs-15 mb-0 text-secondary"></p>
+            </div>
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-light fw-medium px-4" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary fw-medium text-white px-4" id="confirmActionBtn">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let confirmModal;
+        let onConfirm = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            confirmModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            
+            document.getElementById('confirmActionBtn').addEventListener('click', function() {
+                if (onConfirm) onConfirm();
+                confirmModal.hide();
+            });
+        });
+
+        function showConfirm(message, callback) {
+            document.getElementById('confirmationMessage').textContent = message;
+            onConfirm = callback;
+            confirmModal.show();
+        }
+    </script>
+}
