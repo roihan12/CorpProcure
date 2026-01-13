@@ -1,0 +1,250 @@
+@model List<CorpProcure.DTOs.SystemSetting.SystemSettingDto>
+@{
+    ViewData["Title"] = "System Settings";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var grouped = ViewBag.GroupedSettings as Dictionary<string, List<CorpProcure.DTOs.SystemSetting.SystemSettingDto>>;
+}
+<div class="main-content-container overflow-hidden">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+        <h3 class="mb-0">
+            <i class="ri-settings-3-line me-2"></i>System Settings
+        </h3>
+        <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+            <ol class="breadcrumb align-items-center mb-0 lh-1">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+                        <i class="ri-home-4-line fs-18 text-primary me-1"></i>
+                        <span class="text-secondary fw-medium">Dashboard</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <span class="fw-medium">Settings</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="ri-checkbox-circle-line me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ri-error-warning-line me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- No Settings Alert -->
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="ri-information-line me-2"></i>
+            No settings found. Click the button below to seed default settings.
+        </div>
+        <form asp-action="Seed" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-primary">
+                <i class="ri-database-2-line me-1"></i> Seed Default Settings
+            </button>
+        </form>
+    }
+    else
+    {
+        <!-- Settings Form -->
+        <form id="settingsForm">
+            @Html.AntiForgeryToken()
+            
+            @if (grouped != null)
+            {
+                @foreach (var category in grouped)
+                {
+                    <div class="card bg-white border-0 rounded-3 mb-4">
+                        <div class="card-header bg-light border-0 py-3">
+                            <h5 class="mb-0">
+                                @switch (category.Key)
+                                {
+                                    case "AutoApproval":
+                                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                                        <span>Auto-Approval Settings</span>
+                                        break;
+                                    case "Email":
+                                        <i class="ri-mail-line text-primary me-2"></i>
+                                        <span>Email Notification Settings</span>
+                                        break;
+                                    case "General":
+                                        <i class="ri-settings-4-line text-secondary me-2"></i>
+                                        <span>General Settings</span>
+                                        break;
+                                    default:
+                                        <i class="ri-list-settings-line me-2"></i>
+                                        <span>@category.Key</span>
+                                        break;
+                                }
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @foreach (var setting in category.Value)
+                            {
+                                <div class="row mb-3 align-items-center py-2 border-bottom">
+                                    <div class="col-md-5">
+                                        <label class="form-label fw-medium mb-0">
+                                            @(setting.Description ?? setting.Key)
+                                        </label>
+                                        <div class="text-muted small">@setting.Key</div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        @if (setting.DataType == "Boolean")
+                                        {
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input setting-input" 
+                                                       type="checkbox" 
+                                                       role="switch"
+                                                       id="setting_@setting.Id"
+                                                       data-id="@setting.Id"
+                                                       data-type="Boolean"
+                                                       @(setting.Value.ToLower() == "true" ? "checked" : "")
+                                                       @(!setting.IsEditable ? "disabled" : "")>
+                                                <label class="form-check-label" for="setting_@setting.Id">
+                                                    @(setting.Value.ToLower() == "true" ? "Enabled" : "Disabled")
+                                                </label>
+                                            </div>
+                                        }
+                                        else if (setting.DataType == "Decimal" || setting.DataType == "Integer")
+                                        {
+                                            <div class="input-group">
+                                                @if (setting.Key.Contains("Threshold") || setting.Key.Contains("Amount"))
+                                                {
+                                                    <span class="input-group-text">Rp</span>
+                                                }
+                                                <input type="number" 
+                                                       class="form-control setting-input"
+                                                       id="setting_@setting.Id"
+                                                       data-id="@setting.Id"
+                                                       data-type="@setting.DataType"
+                                                       value="@setting.Value"
+                                                       @(!setting.IsEditable ? "disabled" : "")>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <input type="text" 
+                                                   class="form-control setting-input"
+                                                   id="setting_@setting.Id"
+                                                   data-id="@setting.Id"
+                                                   data-type="@setting.DataType"
+                                                   value="@setting.Value"
+                                                   @(!setting.IsEditable ? "readonly" : "")>
+                                        }
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        @if (!setting.IsEditable)
+                                        {
+                                            <span class="badge bg-secondary">Read-only</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+
+            <!-- Save Button -->
+            <div class="d-flex justify-content-end gap-2 mb-4">
+                <button type="button" class="btn btn-outline-secondary" onclick="location.reload()">
+                    <i class="ri-refresh-line me-1"></i> Reset
+                </button>
+                <button type="submit" class="btn btn-primary px-4" id="saveBtn">
+                    <i class="ri-save-line me-1"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    }
+</div>
+
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle switch label update
+    document.querySelectorAll('.form-check-input[data-type="Boolean"]').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            label.textContent = this.checked ? 'Enabled' : 'Disabled';
+        });
+    });
+
+    // Form submission
+    document.getElementById('settingsForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const saveBtn = document.getElementById('saveBtn');
+        const originalText = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+        saveBtn.disabled = true;
+
+        const settings = [];
+        document.querySelectorAll('.setting-input:not([disabled]):not([readonly])').forEach(function(input) {
+            let value;
+            if (input.type === 'checkbox') {
+                value = input.checked.toString();
+            } else {
+                value = input.value;
+            }
+            settings.push({
+                id: input.dataset.id,
+                value: value
+            });
+        });
+
+        try {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const response = await fetch('@Url.Action("BatchUpdate", "Settings")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ settings: settings })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Show success toast
+                showToast('success', 'Settings saved successfully!');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('error', result.message || 'Failed to save settings');
+            }
+        } catch (error) {
+            showToast('error', 'An error occurred while saving settings');
+            console.error(error);
+        } finally {
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
+    });
+
+    function showToast(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? 'ri-checkbox-circle-line' : 'ri-error-warning-line';
+        const toast = document.createElement('div');
+        toast.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            <i class="${icon} me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+});
+</script>
+}

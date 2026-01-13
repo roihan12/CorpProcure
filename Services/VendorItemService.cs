@@ -233,6 +233,28 @@ public class VendorItemService : IVendorItemService
         return Result<VendorItemDto?>.Ok(MapToDto(vendorItem));
     }
 
+    public async Task<Result<Dictionary<Guid, decimal>>> GetPricesForItemsAsync(Guid vendorId, List<Guid> itemIds)
+    {
+        try
+        {
+            var prices = await _context.Set<VendorItem>()
+                .Where(vi => vi.VendorId == vendorId
+                    && itemIds.Contains(vi.ItemId)
+                    && vi.IsActive
+                    && (!vi.PriceValidFrom.HasValue || vi.PriceValidFrom <= DateTime.UtcNow)
+                    && (!vi.PriceValidTo.HasValue || vi.PriceValidTo >= DateTime.UtcNow))
+                .Select(vi => new { vi.ItemId, vi.ContractPrice })
+                .ToDictionaryAsync(x => x.ItemId, x => x.ContractPrice);
+
+            return Result<Dictionary<Guid, decimal>>.Ok(prices);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting prices for items from vendor {VendorId}", vendorId);
+            return Result<Dictionary<Guid, decimal>>.Fail($"Error: {ex.Message}");
+        }
+    }
+
     private static VendorItemDto MapToDto(VendorItem vi)
     {
         return new VendorItemDto

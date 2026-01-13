@@ -27,28 +27,88 @@
 
     <div class="card bg-white border-0 rounded-3 mb-4">
         <div class="card-body p-0">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-4">
-                <form asp-action="Index" method="get" class="position-relative table-src-form me-0">
-                    <input type="text" name="searchString" class="form-control" placeholder="Search requests..." value="@ViewData["CurrentFilter"]">
-                    <button type="submit" class="border-0 bg-transparent position-absolute top-50 start-0 translate-middle-y">
-                        <i class="material-symbols-outlined">search</i>
-                    </button>
-                </form>
+            <!-- Filter and Search Row -->
+            <div class="p-4 border-bottom">
+                @{
+                    var isDeptRequests = ViewData["IsDepartmentRequests"] as bool? ?? false;
+                    var showAllDepts = ViewData["ShowAllDepartments"] as bool? ?? false;
+                    var actionName = isDeptRequests ? "DepartmentRequests" : "Index";
+                    var departments = ViewData["Departments"] as List<SelectListItem> ?? new List<SelectListItem>();
+                }
                 
-                <div class="d-flex gap-2">
-                    <a asp-action="MyApprovals" class="btn btn-outline-secondary py-1 px-2 px-sm-4 fs-14 fw-medium rounded-3">
-                        <span class="py-sm-1 d-block">
-                            <i class="ri-checkbox-circle-line d-none d-sm-inline-block"></i>
-                            <span>My Approvals</span>
-                        </span>
-                    </a>
-                    <a asp-action="Create" class="btn btn-primary py-1 px-2 px-sm-4 fs-14 fw-medium rounded-3">
-                        <span class="py-sm-1 d-block">
-                            <i class="ri-add-line d-none d-sm-inline-block"></i>
-                            <span>New Request</span>
-                        </span>
-                    </a>
-                </div>
+                <form asp-action="@actionName" method="get" class="row g-3 align-items-end">
+                    <!-- Search Input -->
+                    <div class="col-md-4 col-lg-3">
+                        <label class="form-label small text-muted mb-1">Search</label>
+                        <div class="position-relative">
+                            <input type="text" name="searchString" class="form-control ps-4" 
+                                   placeholder="Request #, title, requester..." 
+                                   value="@ViewData["CurrentFilter"]">
+                            <i class="ri-search-line position-absolute top-50 start-0 translate-middle-y ms-2 text-muted"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <div class="col-md-3 col-lg-2">
+                        <label class="form-label small text-muted mb-1">Status</label>
+                        @{
+                            var currentStatus = ViewData["StatusFilter"]?.ToString() ?? "";
+                        }
+                        <select name="statusFilter" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="Draft" selected="@(currentStatus == "Draft")">Draft</option>
+                            <option value="PendingManager" selected="@(currentStatus == "PendingManager")">Pending Manager</option>
+                            <option value="PendingFinance" selected="@(currentStatus == "PendingFinance")">Pending Finance</option>
+                            <option value="Approved" selected="@(currentStatus == "Approved")">Approved</option>
+                            <option value="Rejected" selected="@(currentStatus == "Rejected")">Rejected</option>
+                            <option value="Cancelled" selected="@(currentStatus == "Cancelled")">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Department Filter (Finance/Admin only) -->
+                    @if (showAllDepts && departments.Any())
+                    {
+                        var currentDept = ViewData["DepartmentFilter"]?.ToString() ?? "";
+                        <div class="col-md-3 col-lg-2">
+                            <label class="form-label small text-muted mb-1">Department</label>
+                            <select name="departmentFilter" class="form-select">
+                                <option value="">All Departments</option>
+                                @foreach (var dept in departments)
+                                {
+                                    <option value="@dept.Value" selected="@(currentDept == dept.Value)">@dept.Text</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    
+                    <!-- Filter Buttons -->
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-filter-line me-1"></i> Filter
+                        </button>
+                        <a asp-action="@actionName" class="btn btn-outline-secondary ms-1">
+                            <i class="ri-refresh-line me-1"></i> Reset
+                        </a>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="col-auto ms-auto">
+                        @if (User.IsInRole("Manager") || User.IsInRole("Finance") || User.IsInRole("Admin"))
+                        {
+                            <a asp-action="MyApprovals" class="btn btn-outline-info me-1">
+                                <i class="ri-checkbox-circle-line me-1"></i>
+                                <span class="d-none d-md-inline">My Approvals</span>
+                            </a>
+                        }
+                        @if (User.IsInRole("Staff") || User.IsInRole("Manager"))
+                        {
+                            <a asp-action="Create" class="btn btn-primary">
+                                <i class="ri-add-line me-1"></i>
+                                <span class="d-none d-md-inline">New Request</span>
+                            </a>
+                        }
+                    </div>
+                </form>
             </div>
 
             @if (!Model.Any())
@@ -156,14 +216,22 @@
                         int totalPages = (int)(ViewData["TotalPages"] ?? 1);
                         bool hasPreviousPage = (bool)(ViewData["HasPreviousPage"] ?? false);
                         bool hasNextPage = (bool)(ViewData["HasNextPage"] ?? false);
-                        string currentFilter = (string)ViewData["CurrentFilter"] ?? "";
+                        string currentFilter = ViewData["CurrentFilter"]?.ToString() ?? "";
+                        string statusFilter = ViewData["StatusFilter"]?.ToString() ?? "";
+                        string deptFilter = ViewData["DepartmentFilter"]?.ToString() ?? "";
+                        bool isDeptReq = ViewData["IsDepartmentRequests"] as bool? ?? false;
+                        string paginationAction = isDeptReq ? "DepartmentRequests" : "Index";
                     }
                     
                     <nav aria-label="Page navigation">
                         <ul class="pagination pagination-light mb-0">
                             <!-- Previous page button -->
                             <li class="page-item @(!hasPreviousPage ? "disabled" : "")">
-                                <a class="page-link" asp-action="Index" asp-route-page="@(currentPage - 1)" asp-route-searchString="@currentFilter" 
+                                <a class="page-link" asp-action="@paginationAction" 
+                                   asp-route-page="@(currentPage - 1)" 
+                                   asp-route-searchString="@currentFilter"
+                                   asp-route-statusFilter="@statusFilter"
+                                   asp-route-departmentFilter="@deptFilter"
                                    aria-label="Previous">
                                     <span aria-hidden="true">
                                         <i class="ri-arrow-left-s-line align-middle"></i>
@@ -179,7 +247,9 @@
                                 if (startPage > 1)
                                 {
                                     <li class="page-item">
-                                        <a class="page-link" asp-action="Index" asp-route-page="1" asp-route-searchString="@currentFilter">1</a>
+                                        <a class="page-link" asp-action="@paginationAction" asp-route-page="1" 
+                                           asp-route-searchString="@currentFilter" asp-route-statusFilter="@statusFilter"
+                                           asp-route-departmentFilter="@deptFilter">1</a>
                                     </li>
                                     
                                     if (startPage > 2)
@@ -193,7 +263,9 @@
                                 for (int i = startPage; i <= endPage; i++)
                                 {
                                     <li class="page-item @(i == currentPage ? "active" : "")">
-                                        <a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-searchString="@currentFilter">@i</a>
+                                        <a class="page-link" asp-action="@paginationAction" asp-route-page="@i" 
+                                           asp-route-searchString="@currentFilter" asp-route-statusFilter="@statusFilter"
+                                           asp-route-departmentFilter="@deptFilter">@i</a>
                                     </li>
                                 }
                                 
@@ -207,14 +279,20 @@
                                     }
                                     
                                     <li class="page-item">
-                                        <a class="page-link" asp-action="Index" asp-route-page="@totalPages" asp-route-searchString="@currentFilter">@totalPages</a>
+                                        <a class="page-link" asp-action="@paginationAction" asp-route-page="@totalPages" 
+                                           asp-route-searchString="@currentFilter" asp-route-statusFilter="@statusFilter"
+                                           asp-route-departmentFilter="@deptFilter">@totalPages</a>
                                     </li>
                                 }
                             }
                             
                             <!-- Next page button -->
                             <li class="page-item @(!hasNextPage ? "disabled" : "")">
-                                <a class="page-link" asp-action="Index" asp-route-page="@(currentPage + 1)" asp-route-searchString="@currentFilter" 
+                                <a class="page-link" asp-action="@paginationAction" 
+                                   asp-route-page="@(currentPage + 1)" 
+                                   asp-route-searchString="@currentFilter"
+                                   asp-route-statusFilter="@statusFilter"
+                                   asp-route-departmentFilter="@deptFilter"
                                    aria-label="Next">
                                     <span aria-hidden="true">
                                         <i class="ri-arrow-right-s-line align-middle"></i>

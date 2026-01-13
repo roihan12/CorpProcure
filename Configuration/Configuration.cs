@@ -135,6 +135,12 @@ public static class IdentityConfiguration
         // Add File Upload service (attachments)
         services.AddScoped<IFileUploadService, FileUploadService>();
 
+        // Add System Settings service
+        services.AddScoped<ISystemSettingService, SystemSettingService>();
+
+        // Add Email service
+        services.AddScoped<IEmailService, EmailService>();
+
         return services;
     }
 

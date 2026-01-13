@@ -44,4 +44,10 @@ public interface IVendorItemService
     /// Get contract price for a specific vendor and item combination
     /// </summary>
     Task<Result<VendorItemDto?>> GetContractPriceAsync(Guid vendorId, Guid itemId);
+
+    /// <summary>
+    /// Get contract prices for multiple items from a specific vendor
+    /// Returns dictionary of ItemId -> Price
+    /// </summary>
+    Task<Result<Dictionary<Guid, decimal>>> GetPricesForItemsAsync(Guid vendorId, List<Guid> itemIds);
 }

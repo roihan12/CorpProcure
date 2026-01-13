@@ -14,6 +14,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Add AuditInterceptor
 builder.Services.AddScoped<AuditInterceptor>();
 
+// Add Memory Cache for SystemSettingService
+builder.Services.AddMemoryCache();
+
+// Bind EmailSettings from configuration
+builder.Services.Configure<CorpProcure.Configuration.EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+
 // Add CorpProcure (Identity + Authorization + Services)
 // This includes:
 // - ASP.NET Core Identity with custom password policies

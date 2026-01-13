@@ -184,6 +184,14 @@
                             <span class="title">Audit Logs</span>
                         </a>
                     </li>
+
+                    <li class="menu-item">
+                        <a asp-controller="Settings" asp-action="Index"
+                           class="menu-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Settings" ? "active" : "")">
+                            <span class="material-symbols-outlined menu-icon">settings</span>
+                            <span class="title">System Settings</span>
+                        </a>
+                    </li>
                 }
             }
 

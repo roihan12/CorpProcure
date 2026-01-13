@@ -59,7 +59,7 @@ public class GeneratePoItemDto
     public Guid RequestItemId { get; set; }
     public Guid ItemId { get; set; }
     public string ItemName { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; } // Made nullable - not required
     public int Quantity { get; set; }
     
     [Display(Name = "Unit Price")]

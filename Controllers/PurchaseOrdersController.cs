@@ -21,19 +21,22 @@ namespace CorpProcure.Controllers
         private readonly IPurchaseOrderService _purchaseOrderService;
         private readonly IPurchaseOrderPdfService _pdfService;
         private readonly IVendorService _vendorService;
+        private readonly IBudgetService _budgetService;
 
         public PurchaseOrdersController(
             ApplicationDbContext context,
             IPurchaseRequestService purchaseRequestService,
             IPurchaseOrderService purchaseOrderService,
             IPurchaseOrderPdfService pdfService,
-            IVendorService vendorService)
+            IVendorService vendorService,
+            IBudgetService budgetService)
         {
             _context = context;
             _purchaseRequestService = purchaseRequestService;
             _purchaseOrderService = purchaseOrderService;
             _pdfService = pdfService;
             _vendorService = vendorService;
+            _budgetService = budgetService;
         }
 
         // GET: PurchaseOrder
@@ -101,6 +104,24 @@ namespace CorpProcure.Controllers
                 TempData["Warning"] = "Active PO already exists for this request.";
             }
 
+            // Get budget info for display
+            var budget = await _budgetService.GetBudgetAsync(request.DepartmentId);
+            if (budget != null)
+            {
+                ViewBag.BudgetInfo = new
+                {
+                    TotalBudget = budget.TotalAmount,
+                    CurrentUsage = budget.CurrentUsage,
+                    Reserved = budget.ReservedAmount,
+                    Available = budget.AvailableAmount,
+                    UsedPercentage = budget.TotalAmount > 0 
+                        ? Math.Round((budget.CurrentUsage / budget.TotalAmount) * 100, 1) 
+                        : 0,
+                    DepartmentName = request.Department.Name,
+                    Year = budget.Year
+                };
+            }
+
             // Prepare DTO with Defaults
             var dto = new GeneratePoDto
             {
@@ -142,6 +163,14 @@ namespace CorpProcure.Controllers
         {
             if (!ModelState.IsValid)
             {
+                // Collect validation errors for display
+                var errors = ModelState
+                    .Where(x => x.Value?.Errors.Count > 0)
+                    .Select(x => $"{x.Key}: {string.Join(", ", x.Value!.Errors.Select(e => e.ErrorMessage))}")
+                    .ToList();
+                
+                TempData["Error"] = "Validation failed: " + string.Join("; ", errors);
+                
                 // Reload data for view
                 await LoadVendorDropdownAsync(dto.VendorId);
                 var request = await _context.PurchaseRequests
@@ -150,6 +179,27 @@ namespace CorpProcure.Controllers
                     .Include(p => p.Items)
                     .FirstOrDefaultAsync(p => p.Id == dto.PurchaseRequestId);
                 ViewBag.RequestDetails = request;
+
+                // Reload budget info
+                if (request != null)
+                {
+                    var budget = await _budgetService.GetBudgetAsync(request.DepartmentId);
+                    if (budget != null)
+                    {
+                        ViewBag.BudgetInfo = new
+                        {
+                            TotalBudget = budget.TotalAmount,
+                            CurrentUsage = budget.CurrentUsage,
+                            Reserved = budget.ReservedAmount,
+                            Available = budget.AvailableAmount,
+                            UsedPercentage = budget.TotalAmount > 0 
+                                ? Math.Round((budget.CurrentUsage / budget.TotalAmount) * 100, 1) 
+                                : 0,
+                            DepartmentName = request.Department?.Name ?? "",
+                            Year = budget.Year
+                        };
+                    }
+                }
 
                 return View("Generate", dto);
             }
@@ -169,6 +219,27 @@ namespace CorpProcure.Controllers
                     .Include(p => p.Items)
                     .FirstOrDefaultAsync(p => p.Id == dto.PurchaseRequestId);
                 ViewBag.RequestDetails = request;
+
+                // Reload budget info
+                if (request != null)
+                {
+                    var budget = await _budgetService.GetBudgetAsync(request.DepartmentId);
+                    if (budget != null)
+                    {
+                        ViewBag.BudgetInfo = new
+                        {
+                            TotalBudget = budget.TotalAmount,
+                            CurrentUsage = budget.CurrentUsage,
+                            Reserved = budget.ReservedAmount,
+                            Available = budget.AvailableAmount,
+                            UsedPercentage = budget.TotalAmount > 0 
+                                ? Math.Round((budget.CurrentUsage / budget.TotalAmount) * 100, 1) 
+                                : 0,
+                            DepartmentName = request.Department?.Name ?? "",
+                            Year = budget.Year
+                        };
+                    }
+                }
 
                 return View("Generate", dto);
             }

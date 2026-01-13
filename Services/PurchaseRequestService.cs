@@ -14,17 +14,23 @@ public class PurchaseRequestService : IPurchaseRequestService
     private readonly ApplicationDbContext _context;
     private readonly INumberGeneratorService _numberGenerator;
     private readonly IBudgetService _budgetService;
+    private readonly IEmailService _emailService;
+    private readonly ISystemSettingService _systemSettings;
     private readonly ILogger<PurchaseRequestService> _logger;
 
     public PurchaseRequestService(
         ApplicationDbContext context,
         INumberGeneratorService numberGenerator,
         IBudgetService budgetService,
+        IEmailService emailService,
+        ISystemSettingService systemSettings,
         ILogger<PurchaseRequestService> logger)
     {
         _context = context;
         _numberGenerator = numberGenerator;
         _budgetService = budgetService;
+        _emailService = emailService;
+        _systemSettings = systemSettings;
         _logger = logger;
     }
 
@@ -351,6 +357,8 @@ public class PurchaseRequestService : IPurchaseRequestService
         {
             var pr = await _context.PurchaseRequests
                 .Include(p => p.Department)
+                .Include(p => p.Requester)
+                .Include(p => p.Items)
                 .FirstOrDefaultAsync(p => p.Id == requestId);
 
             if (pr == null)
@@ -368,6 +376,7 @@ public class PurchaseRequestService : IPurchaseRequestService
             try
             {
                 pr.ApproveByManager(managerId, comments);
+                pr.ManagerApprover = manager; // Set for email template
 
                 // Create approval history
                 _context.ApprovalHistories.Add(new ApprovalHistory
@@ -382,6 +391,9 @@ public class PurchaseRequestService : IPurchaseRequestService
                 });
 
                 await _context.SaveChangesAsync();
+
+                // Send email notification to Finance
+                await _emailService.SendPrApprovedByManagerAsync(pr);
 
                 _logger.LogInformation(
                     "Purchase request {RequestId} approved by manager {ManagerId}",
@@ -408,15 +420,21 @@ public class PurchaseRequestService : IPurchaseRequestService
         {
             var pr = await _context.PurchaseRequests
                 .Include(p => p.Department)
+                .Include(p => p.Requester)
+                .Include(p => p.ManagerApprover)
                 .FirstOrDefaultAsync(p => p.Id == requestId);
 
             if (pr == null)
                 return Result.Fail("Purchase request not found");
 
+            // Get finance user for email template
+            var financeUser = await _context.Users.FindAsync(financeId);
+
             // Approve
             try
             {
                 pr.ApproveByFinance(financeId, comments);
+                pr.FinanceApprover = financeUser; // Set for email template
 
                 // Create approval history
                 _context.ApprovalHistories.Add(new ApprovalHistory
@@ -439,6 +457,9 @@ public class PurchaseRequestService : IPurchaseRequestService
                 }
 
                 await _context.SaveChangesAsync();
+
+                // Send email notification to Requester
+                await _emailService.SendPrApprovedAsync(pr);
 
                 _logger.LogInformation(
                     "Purchase request {RequestId} fully approved by finance {FinanceId}",
@@ -468,10 +489,15 @@ public class PurchaseRequestService : IPurchaseRequestService
 
             var pr = await _context.PurchaseRequests
                 .Include(p => p.Department)
+                .Include(p => p.Requester)
                 .FirstOrDefaultAsync(p => p.Id == requestId);
 
             if (pr == null)
                 return Result.Fail("Purchase request not found");
+
+            // Get rejector name for email
+            var rejector = await _context.Users.FindAsync(rejectorId);
+            var rejectorName = rejector?.FullName ?? "Unknown";
 
             // Store current approval level for history
             int approvalLevel = pr.Status == RequestStatus.PendingManager ? 1 : 2;
@@ -501,6 +527,9 @@ public class PurchaseRequestService : IPurchaseRequestService
                 }
 
                 await _context.SaveChangesAsync();
+
+                // Send email notification to Requester
+                await _emailService.SendPrRejectedAsync(pr, rejectorName, reason);
 
                 _logger.LogInformation(
                     "Purchase request {RequestId} rejected by {RejectorId}",
@@ -571,6 +600,8 @@ public class PurchaseRequestService : IPurchaseRequestService
         {
             var pr = await _context.PurchaseRequests
                 .Include(p => p.Department)
+                    .ThenInclude(d => d.Manager)
+                .Include(p => p.Requester)
                 .Include(p => p.Items)
                 .FirstOrDefaultAsync(p => p.Id == requestId);
 
@@ -594,9 +625,6 @@ public class PurchaseRequestService : IPurchaseRequestService
                     $"Insufficient budget. Required: Rp {pr.TotalAmount:N0}, Available: Rp {budget.AvailableAmount:N0}");
             }
 
-            // Submit the request (change status to PendingManager)
-            pr.Submit();
-
             // Reserve budget
             var budgetReserved = await _budgetService.ReserveBudgetAsync(budget.Id, pr.TotalAmount);
             if (!budgetReserved)
@@ -604,11 +632,67 @@ public class PurchaseRequestService : IPurchaseRequestService
                 return Result.Fail("Failed to reserve budget");
             }
 
+            // Submit the request (change status to PendingManager)
+            pr.Submit();
+
+            // Check auto-approval eligibility
+            var autoApprovalEnabled = await _systemSettings.GetValueAsync("AutoApproval:Enabled", false);
+            bool autoApprovedManager = false;
+
+            if (autoApprovalEnabled)
+            {
+                var managerThreshold = await _systemSettings.GetValueAsync("AutoApproval:ManagerThreshold", 1000000m);
+
+                if (pr.TotalAmount <= managerThreshold)
+                {
+                    // Auto-approve Manager level
+                    pr.Status = RequestStatus.PendingFinance;
+                    pr.ManagerApprovalDate = DateTime.UtcNow;
+                    pr.ManagerNotes = "[Auto-Approved] Amount below threshold";
+
+                    // Create approval history for auto-approval
+                    _context.ApprovalHistories.Add(new ApprovalHistory
+                    {
+                        PurchaseRequestId = requestId,
+                        ApproverUserId = userId, // Use requester as approver for auto
+                        ApprovalLevel = 1,
+                        Action = ApprovalAction.Approved,
+                        PreviousStatus = RequestStatus.PendingManager,
+                        NewStatus = RequestStatus.PendingFinance,
+                        ApprovedAt = DateTime.UtcNow,
+                        Comments = $"Auto-approved: Amount (Rp {pr.TotalAmount:N0}) below threshold (Rp {managerThreshold:N0})",
+                        RequestAmount = pr.TotalAmount
+                    });
+
+                    autoApprovedManager = true;
+
+                    _logger.LogInformation(
+                        "Purchase request {RequestId} auto-approved at Manager level (Amount: Rp {Amount:N0}, Threshold: Rp {Threshold:N0})",
+                        requestId, pr.TotalAmount, managerThreshold);
+
+                    // Send auto-approval notification
+                    await _emailService.SendAutoApprovalNotificationAsync(
+                        pr, "Manager", $"Amount (Rp {pr.TotalAmount:N0}) is below auto-approval threshold (Rp {managerThreshold:N0})");
+                }
+            }
+
             await _context.SaveChangesAsync();
 
+            // Send email notifications
+            if (autoApprovedManager)
+            {
+                // Send to Finance since Manager was auto-approved
+                await _emailService.SendPrApprovedByManagerAsync(pr);
+            }
+            else
+            {
+                // Send to Manager for approval
+                await _emailService.SendPrSubmittedToManagerAsync(pr);
+            }
+
             _logger.LogInformation(
-                "Purchase request {RequestId} submitted by user {UserId}",
-                requestId, userId);
+                "Purchase request {RequestId} submitted by user {UserId} (AutoApproved: {AutoApproved})",
+                requestId, userId, autoApprovedManager);
 
             return Result.Ok();
         }

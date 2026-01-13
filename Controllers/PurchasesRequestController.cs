@@ -32,7 +32,7 @@ namespace CorpProcure.Controllers
         }
 
         // GET: PurchasesRequest
-        public async Task<IActionResult> Index(string searchString, int page = 1)
+        public async Task<IActionResult> Index(string? searchString, string? statusFilter, int page = 1)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var query = _context.PurchaseRequests
@@ -43,12 +43,19 @@ namespace CorpProcure.Controllers
                 .Where(p => p.RequesterId.ToString() == userId)
                 .AsQueryable();
 
+            // Apply search filter
             if (!string.IsNullOrEmpty(searchString))
             {
                 query = query.Where(p =>
                     p.RequestNumber.Contains(searchString) ||
                     p.Title.Contains(searchString) ||
-                    p.Description!.Contains(searchString));
+                    (p.Description != null && p.Description.Contains(searchString)));
+            }
+
+            // Apply status filter
+            if (!string.IsNullOrEmpty(statusFilter) && Enum.TryParse<RequestStatus>(statusFilter, out var status))
+            {
+                query = query.Where(p => p.Status == status);
             }
 
             var pageSize = 10;
@@ -62,6 +69,7 @@ namespace CorpProcure.Controllers
                 .ToListAsync();
 
             ViewData["CurrentFilter"] = searchString;
+            ViewData["StatusFilter"] = statusFilter;
             ViewData["CurrentPage"] = page;
             ViewData["TotalPages"] = totalPages;
             ViewData["TotalItems"] = totalItems;
@@ -422,8 +430,8 @@ namespace CorpProcure.Controllers
         [Authorize(Roles = "Procurement,Finance,Admin")]
         public IActionResult GeneratePOConfirmed(Guid id)
         {
-            // Redirect to PurchaseOrderController which has vendor selection
-            return RedirectToAction("Generate", "PurchaseOrder", new { id });
+            // Redirect to PurchaseOrdersController which has vendor selection
+        return RedirectToAction("Generate", "PurchaseOrders", new { id });
         }
 
         // GET: PurchasesRequest/DownloadPO/5
@@ -473,39 +481,97 @@ namespace CorpProcure.Controllers
 
         // GET: PurchasesRequest/DepartmentRequests
         [Authorize(Roles = "Manager,Finance,Admin")]
-        public async Task<IActionResult> DepartmentRequests()
+        public async Task<IActionResult> DepartmentRequests(
+            string? searchString, 
+            string? statusFilter, 
+            Guid? departmentFilter,
+            int page = 1)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var user = await _context.Users.FindAsync(userId);
+            var userRoles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
+            var isFinanceOrAdmin = userRoles.Contains("Finance") || userRoles.Contains("Admin");
 
             if (user == null)
             {
                 return Unauthorized();
             }
 
-            var result = await _purchaseRequestService.GetDepartmentRequestsAsync(user.DepartmentId);
+            IQueryable<PurchaseRequest> query;
 
-            if (!result.Success)
+            // Finance and Admin can see all PRs from all departments
+            if (isFinanceOrAdmin)
             {
-                TempData["Error"] = result.ErrorMessage;
-                return View("Index", new List<PurchaseRequest>());
+                query = _context.PurchaseRequests
+                    .Include(p => p.Requester)
+                    .Include(p => p.Department)
+                    .Include(p => p.PurchaseOrders)
+                    .AsQueryable();
+            }
+            else
+            {
+                // Manager only sees their department's PRs
+                query = _context.PurchaseRequests
+                    .Include(p => p.Requester)
+                    .Include(p => p.Department)
+                    .Include(p => p.PurchaseOrders)
+                    .Where(p => p.DepartmentId == user.DepartmentId)
+                    .AsQueryable();
             }
 
-            // Map to PurchaseRequest for view compatibility
-            var requests = await _context.PurchaseRequests
-                .Include(p => p.Requester)
-                .Include(p => p.Department)
-                .Where(p => result.Data!.Select(r => r.Id).Contains(p.Id))
+            // Apply search filter
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                query = query.Where(p =>
+                    p.RequestNumber.Contains(searchString) ||
+                    p.Title.Contains(searchString) ||
+                    (p.Description != null && p.Description.Contains(searchString)) ||
+                    (p.Requester != null && p.Requester.FullName.Contains(searchString)));
+            }
+
+            // Apply status filter
+            if (!string.IsNullOrEmpty(statusFilter) && Enum.TryParse<RequestStatus>(statusFilter, out var status))
+            {
+                query = query.Where(p => p.Status == status);
+            }
+
+            // Apply department filter (only for Finance/Admin)
+            if (isFinanceOrAdmin && departmentFilter.HasValue)
+            {
+                query = query.Where(p => p.DepartmentId == departmentFilter.Value);
+            }
+
+            // Pagination
+            var pageSize = 10;
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            var requests = await query
                 .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            // Populate ViewData required by Index.cshtml due to pagination logic
-            ViewData["CurrentFilter"] = "";
-            ViewData["CurrentPage"] = 1;
-            ViewData["TotalPages"] = 1; // Since GetDepartmentRequestsAsync returns all, we act as 1 page
-            ViewData["TotalItems"] = requests.Count;
-            ViewData["HasPreviousPage"] = false;
-            ViewData["HasNextPage"] = false;
+            // Populate ViewData
+            ViewData["CurrentFilter"] = searchString;
+            ViewData["StatusFilter"] = statusFilter;
+            ViewData["DepartmentFilter"] = departmentFilter;
+            ViewData["CurrentPage"] = page;
+            ViewData["TotalPages"] = totalPages;
+            ViewData["TotalItems"] = totalItems;
+            ViewData["HasPreviousPage"] = page > 1;
+            ViewData["HasNextPage"] = page < totalPages;
+            ViewData["ShowAllDepartments"] = isFinanceOrAdmin;
+            ViewData["IsDepartmentRequests"] = true;
+
+            // Populate department dropdown for Finance/Admin
+            if (isFinanceOrAdmin)
+            {
+                ViewData["Departments"] = await _context.Departments
+                    .OrderBy(d => d.Name)
+                    .Select(d => new SelectListItem { Value = d.Id.ToString(), Text = d.Name })
+                    .ToListAsync();
+            }
 
             return View("Index", requests);
         }
