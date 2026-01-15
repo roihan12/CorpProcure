@@ -252,6 +252,9 @@ public class SystemSettingService : ISystemSettingService
         }
 
         await _context.SaveChangesAsync();
+        
+        // Clear cache so new settings are immediately visible
+        InvalidateAllCache();
     }
 
     private static List<SystemSetting> GetDefaultSettings()
