@@ -27,10 +27,9 @@ pipeline {
         
         stage('Run Tests') {
             steps {
-                echo 'Running tests...'
-                sh '''
-                    docker run --rm ${DOCKER_IMAGE}:${DOCKER_TAG} dotnet test --no-build --verbosity normal || true
-                '''
+                echo 'Skipping tests in CI environment (no test database configured)'
+                // To enable tests, configure a test database or use in-memory database
+                // sh 'docker run --rm ${DOCKER_IMAGE}:${DOCKER_TAG} dotnet test --no-build --verbosity normal'
             }
         }
         
