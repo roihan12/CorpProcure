@@ -1,5 +1,4 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
@@ -19,4 +18,13 @@ RUN dotnet publish "CorpProcure.csproj" -c $BUILD_CONFIGURATION -o /app/publish 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# Create uploads directory with correct permissions
+RUN mkdir -p /app/wwwroot/uploads/attachments && \
+    chmod -R 755 /app/wwwroot/uploads
+
+# Switch to non-root user for security
+USER $APP_UID
+
 ENTRYPOINT ["dotnet", "CorpProcure.dll"]
+
