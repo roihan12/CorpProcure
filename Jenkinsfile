@@ -36,24 +36,38 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying to production...'
-                sh '''
-                    cd ${APP_DIR}
-                    
-                    # Pull latest changes
-                    git pull origin master
-                    
-                    # Stop current container
-                    docker compose -f docker-compose.prod.yml stop app
-                    
-                    # Remove old container
-                    docker compose -f docker-compose.prod.yml rm -f app
-                    
-                    # Start new container with latest image
-                    docker compose -f docker-compose.prod.yml up -d app
-                    
-                    # Cleanup old images
-                    docker image prune -f
-                '''
+                withCredentials([
+                    string(credentialsId: 'db-password', variable: 'DB_PASSWORD'),
+                    string(credentialsId: 'smtp-username', variable: 'SMTP_USERNAME'),
+                    string(credentialsId: 'smtp-password', variable: 'SMTP_PASSWORD')
+                ]) {
+                    sh '''
+                        # Stop and remove old app container
+                        docker stop corpprocure-app || true
+                        docker rm corpprocure-app || true
+                        
+                        # Start new app container with latest image
+                        docker run -d \
+                            --name corpprocure-app \
+                            --network corpprocure_corpprocure-network \
+                            -e ASPNETCORE_ENVIRONMENT=Production \
+                            -e ASPNETCORE_URLS=http://+:3000 \
+                            -e "ConnectionStrings__DefaultConnection=Server=db;Database=corpProcure;User=sa;Password=${DB_PASSWORD};TrustServerCertificate=true" \
+                            -e EmailSettings__SmtpHost=sandbox.smtp.mailtrap.io \
+                            -e EmailSettings__SmtpPort=2525 \
+                            -e "EmailSettings__SmtpUsername=${SMTP_USERNAME}" \
+                            -e "EmailSettings__SmtpPassword=${SMTP_PASSWORD}" \
+                            -e EmailSettings__FromEmail=from@example.com \
+                            -e "EmailSettings__FromName=CorpProcure System" \
+                            -e EmailSettings__EnableSsl=true \
+                            -e EmailSettings__IsEnabled=true \
+                            --restart unless-stopped \
+                            corpprocure:latest
+                        
+                        # Cleanup old images
+                        docker image prune -f
+                    '''
+                }
             }
         }
         
