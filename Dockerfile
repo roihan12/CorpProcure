@@ -19,8 +19,9 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 
-# Create uploads directory with correct permissions
+# Create uploads directory with correct permissions and ownership
 RUN mkdir -p /app/wwwroot/uploads/attachments && \
+    chown -R $APP_UID:$APP_UID /app/wwwroot/uploads && \
     chmod -R 755 /app/wwwroot/uploads
 
 # Switch to non-root user for security
