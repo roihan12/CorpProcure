@@ -1,67 +1,76 @@
 <header class="header-area bg-white mb-4 rounded-bottom-15" id="header-area">
-    <div class="row align-items-center">
-        <div class="col-lg-4 col-sm-6">
+    <div class="row align-items-center g-0">
+        <div class="col-6 col-md-4">
             <div class="left-header-content">
-                <ul
-                    class="d-flex align-items-center ps-0 mb-0 list-unstyled justify-content-center justify-content-sm-start">
+                <ul class="d-flex align-items-center ps-0 mb-0 list-unstyled">
                     <li>
-                        <button class="header-burger-menu bg-transparent p-0 border-0" id="header-burger-menu">
+                        <button class="header-burger-menu bg-transparent p-2 border-0" id="header-burger-menu">
                             <span class="material-symbols-outlined">menu</span>
                         </button>
                     </li>
-                    <li>
+                    <li class="d-none d-sm-block">
                         <span class="logo-text">CorpProcure</span>
                     </li>
                 </ul>
             </div>
         </div>
 
-        <div class="col-lg-8 col-sm-6">
-            <div class="right-header-content mt-2 mt-sm-0">
-                <ul
-                    class="d-flex align-items-center justify-content-center justify-content-sm-end ps-0 mb-0 list-unstyled">
+        <div class="col-6 col-md-8">
+            <div class="right-header-content">
+                <ul class="d-flex align-items-center justify-content-end ps-0 mb-0 list-unstyled gap-1 gap-sm-2">
+                    <!-- Dark/Light Mode Toggle -->
                     <li class="header-right-item">
                         <div class="light-dark">
-                            <button class="switch-toggle settings-btn dark-btn p-0 bg-transparent" id="switch-toggle"
+                            <button class="switch-toggle settings-btn dark-btn p-2 bg-transparent" id="switch-toggle"
                                 style="border: none;">
                                 <span class="dark"><i class="material-symbols-outlined">light_mode</i></span>
                                 <span class="light"><i class="material-symbols-outlined">dark_mode</i></span>
                             </button>
                         </div>
                     </li>
-                    <li class="header-right-item">
-                        <button class="fullscreen-btn bg-transparent p-0 border-0" id="fullscreen-button">
+                    
+                    <!-- Fullscreen - Hide on Mobile -->
+                    <li class="header-right-item d-none d-md-block">
+                        <button class="fullscreen-btn bg-transparent p-2 border-0" id="fullscreen-button">
                             <i class="material-symbols-outlined text-body">fullscreen</i>
                         </button>
                     </li>
-                    <li class="header-right-item">
+                    
+                    <!-- User Profile Dropdown - Hide on Mobile -->
+                    <li class="header-right-item d-none d-sm-block">
                         <div class="dropdown admin-profile">
-                            <button class="d-xxl-flex align-items-center bg-transparent border-0 text-start p-0 cursor dropdown-toggle" 
+                            <button class="d-flex align-items-center bg-transparent border-0 text-start p-1 p-sm-2 cursor dropdown-toggle" 
                                     type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                 <div class="flex-shrink-0">
-                                    <img class="rounded-circle wh-40 administrator" src="https://placehold.co/44x44.png?text=No+Image"
-                                        alt="admin" />
+                                    <img class="rounded-circle" style="width: 36px; height: 36px;" 
+                                         src="https://placehold.co/44x44.png?text=No+Image" alt="admin" />
                                 </div>
-                                <div class="flex-grow-1 ms-2">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-none d-xxl-block">
-                                            <div class="d-flex align-content-center">
-                                                <h3 class="mb-0 fs-14 fw-medium">
-                                                    @User.Identity?.Name
-                                                </h3>
-                                            </div>
-                                            <span class="fs-12 text-muted">
-                                                @if (User.IsInRole("Admin")) { <text>Administrator</text> }
-                                                else if (User.IsInRole("Manager")) { <text>Manager</text> }
-                                                else if (User.IsInRole("Finance")) { <text>Finance</text> }
-                                                else if (User.IsInRole("Procurement")) { <text>Procurement</text> }
-                                                else { <text>Staff</text> }
-                                            </span>
-                                        </div>
-                                    </div>
+                                <div class="flex-grow-1 ms-2 d-none d-lg-block">
+                                    <h3 class="mb-0 fs-14 fw-medium text-truncate" style="max-width: 120px;">
+                                        @User.Identity?.Name
+                                    </h3>
+                                    <span class="fs-12 text-muted">
+                                        @if (User.IsInRole("Admin")) { <text>Admin</text> }
+                                        else if (User.IsInRole("Manager")) { <text>Manager</text> }
+                                        else if (User.IsInRole("Finance")) { <text>Finance</text> }
+                                        else if (User.IsInRole("Procurement")) { <text>Proc</text> }
+                                        else { <text>Staff</text> }
+                                    </span>
                                 </div>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2 w-100" aria-labelledby="userDropdown" style="min-width: 200px;">
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2" aria-labelledby="userDropdown" 
+                                style="min-width: 180px;">
+                                <!-- User info for mobile -->
+                                <li class="d-lg-none px-3 py-2 border-bottom mb-2">
+                                    <strong class="fs-14">@User.Identity?.Name</strong>
+                                    <div class="fs-12 text-muted">
+                                        @if (User.IsInRole("Admin")) { <text>Administrator</text> }
+                                        else if (User.IsInRole("Manager")) { <text>Manager</text> }
+                                        else if (User.IsInRole("Finance")) { <text>Finance</text> }
+                                        else if (User.IsInRole("Procurement")) { <text>Procurement</text> }
+                                        else { <text>Staff</text> }
+                                    </div>
+                                </li>
                                 <li>
                                     <a class="dropdown-item py-2" asp-controller="Account" asp-action="Profile">
                                         <i class="ri-user-line me-2 text-primary"></i> My Profile
