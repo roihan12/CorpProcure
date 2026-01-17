@@ -21,7 +21,8 @@ public class SystemSettingDto
 /// </summary>
 public class UpdateSystemSettingDto
 {
-    public Guid Id { get; set; }
+    public Guid? Id { get; set; }
+    public string? Key { get; set; }
     public string Value { get; set; } = string.Empty;
 }
 

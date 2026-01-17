@@ -1,0 +1,241 @@
+@{
+    ViewData["Title"] = "Export Data";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="card-title mb-1">
+                            <i class="ri-download-cloud-2-line me-2 text-primary"></i>Export Data Center
+                        </h4>
+                        <p class="text-muted small mb-0">Download data in Excel format</p>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Master Data Section -->
+                    <div class="col-12">
+                        <h6 class="text-muted text-uppercase small fw-bold mb-3">
+                            <i class="ri-database-2-line me-1"></i> Master Data
+                        </h6>
+                    </div>
+
+                    <!-- Vendors -->
+                    <div class="col-md-4">
+                        <div class="card bg-light border-0 h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="avatar-circle bg-success bg-opacity-10 text-success me-3">
+                                        <i class="ri-building-line"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Vendors</h6>
+                                        <small class="text-muted">Master data vendor</small>
+                                    </div>
+                                </div>
+                                <a href="@Url.Action("Vendors", "Export")" class="btn btn-success btn-sm w-100">
+                                    <i class="ri-file-excel-line me-1"></i> Download Excel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Departments -->
+                    <div class="col-md-4">
+                        <div class="card bg-light border-0 h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="avatar-circle bg-info bg-opacity-10 text-info me-3">
+                                        <i class="ri-home-office-line"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Departments</h6>
+                                        <small class="text-muted">Departments & budgets</small>
+                                    </div>
+                                </div>
+                                <a href="@Url.Action("Departments", "Export")" class="btn btn-success btn-sm w-100">
+                                    <i class="ri-file-excel-line me-1"></i> Download Excel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items Catalog -->
+                    <div class="col-md-4">
+                        <div class="card bg-light border-0 h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="avatar-circle bg-warning bg-opacity-10 text-warning me-3">
+                                        <i class="ri-archive-line"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Items Catalog</h6>
+                                        <small class="text-muted">Product catalog</small>
+                                    </div>
+                                </div>
+                                <a href="@Url.Action("ItemsCatalog", "Export")" class="btn btn-success btn-sm w-100">
+                                    <i class="ri-file-excel-line me-1"></i> Download Excel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Data Section -->
+                    <div class="col-12 mt-4">
+                        <h6 class="text-muted text-uppercase small fw-bold mb-3">
+                            <i class="ri-file-list-3-line me-1"></i> Transaction Data
+                        </h6>
+                    </div>
+
+                    <!-- Purchase Orders -->
+                    <div class="col-md-6">
+                        <div class="card bg-light border-0">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="avatar-circle bg-primary bg-opacity-10 text-primary me-3">
+                                        <i class="ri-file-list-2-line"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Purchase Orders</h6>
+                                        <small class="text-muted">Export PO data with filter</small>
+                                    </div>
+                                </div>
+                                <form action="@Url.Action("PurchaseOrders", "Export")" method="get" class="row g-2">
+                                    <div class="col-5">
+                                        <input type="date" name="startDate" class="form-control form-control-sm" 
+                                               value="@DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd")" />
+                                    </div>
+                                    <div class="col-5">
+                                        <input type="date" name="endDate" class="form-control form-control-sm" 
+                                               value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                    </div>
+                                    <div class="col-2">
+                                        <button type="submit" class="btn btn-success btn-sm w-100">
+                                            <i class="ri-download-line"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vendor Performance -->
+                    <div class="col-md-6">
+                        <div class="card bg-light border-0">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="avatar-circle bg-purple bg-opacity-10 text-purple me-3">
+                                        <i class="ri-bar-chart-grouped-line"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">Vendor Performance</h6>
+                                        <small class="text-muted">Vendor rankings by year</small>
+                                    </div>
+                                </div>
+                                <form action="@Url.Action("VendorPerformance", "Export")" method="get" class="row g-2">
+                                    <div class="col-8">
+                                        <select name="year" class="form-select form-select-sm">
+                                            @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 3; y--)
+                                            {
+                                                <option value="@y">@y</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="submit" class="btn btn-success btn-sm w-100">
+                                            <i class="ri-download-line me-1"></i> Export
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Section -->
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <div class="col-12 mt-4">
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3">
+                                <i class="ri-shield-keyhole-line me-1"></i> Admin Only
+                            </h6>
+                        </div>
+
+                        <!-- Users -->
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="avatar-circle bg-danger bg-opacity-10 text-danger me-3">
+                                            <i class="ri-user-line"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">Users</h6>
+                                            <small class="text-muted">All active users</small>
+                                        </div>
+                                    </div>
+                                    <a href="@Url.Action("Users", "Export")" class="btn btn-success btn-sm w-100">
+                                        <i class="ri-file-excel-line me-1"></i> Download Excel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Audit Logs -->
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="avatar-circle bg-secondary bg-opacity-10 text-secondary me-3">
+                                            <i class="ri-history-line"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">Audit Logs</h6>
+                                            <small class="text-muted">Activity history</small>
+                                        </div>
+                                    </div>
+                                    <form action="@Url.Action("AuditLogs", "Export")" method="get" class="row g-2">
+                                        <div class="col-5">
+                                            <input type="date" name="startDate" class="form-control form-control-sm" 
+                                                   value="@DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")" />
+                                        </div>
+                                        <div class="col-5">
+                                            <input type="date" name="endDate" class="form-control form-control-sm" 
+                                                   value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                        </div>
+                                        <div class="col-2">
+                                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                                <i class="ri-download-line"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+    .bg-purple {
+        background-color: #8b5cf6 !important;
+    }
+    .text-purple {
+        color: #8b5cf6 !important;
+    }
+</style>

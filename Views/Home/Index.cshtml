@@ -12,6 +12,12 @@
     var recentRequests = ViewData["RecentRequests"] as IEnumerable<dynamic>;
     var pendingApprovals = ViewData["PendingApprovals"] as IEnumerable<dynamic>;
     
+    // New analytics data
+    var topVendors = ViewData["TopVendors"] as IEnumerable<dynamic>;
+    var avgProcessingDays = ViewData["AvgProcessingDays"];
+    var yoyComparison = ViewData["YoYComparison"] as dynamic;
+    var spendingByCategory = ViewData["SpendingByCategory"] as IEnumerable<dynamic>;
+    
     bool hasError = ViewData["Error"] != null;
 }
 
@@ -139,19 +145,73 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Avg Processing Time -->
+                <div class="col-sm-6">
+                    <div class="card border-0 rounded-3 bg-white mb-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span
+                                    class="d-inline-block px-3 bg-info bg-opacity-10 text-info border border-info rounded-pill fs-12 fw-medium">Efficiency</span>
+                                <div class="text-end">
+                                    <span class="ms-2 fs-12">Avg. Approval Time</span>
+                                    <span class="fs-12 fw-bold text-info d-block">From Submit to Approved</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-end">
+                                <div class="flex-grow-1">
+                                    <span class="d-block mb-1">Processing Days</span>
+                                    <h4 class="fs-20 mb-0">@(avgProcessingDays ?? 0) <small class="fs-14 text-muted">days</small></h4>
+                                </div>
+                                <div class="flex-shrink-0 me-3 me-auto">
+                                    <i class="ri-timer-line fs-24 text-white bg-info d-inline-block text-center rounded-circle text-white stats-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- YoY Comparison -->
+                <div class="col-sm-6">
+                    <div class="card border-0 rounded-3 bg-white mb-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                @{
+                                    var yoyGrowthVal = yoyComparison?.Growth ?? 0;
+                                    var yoyBadgeClass = yoyGrowthVal >= 0 ? "bg-success bg-opacity-10 text-success border-success" : "bg-danger bg-opacity-10 text-danger border-danger";
+                                    var yoySign = yoyGrowthVal >= 0 ? "+" : "";
+                                }
+                                <span class="d-inline-block px-3 @yoyBadgeClass border rounded-pill fs-12 fw-medium">@yoySign@yoyGrowthVal%</span>
+                                <div class="text-end">
+                                    <span class="ms-2 fs-12">Year over Year</span>
+                                    <span class="fs-12 fw-bold d-block">vs @(DateTime.Now.Year - 1)</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-end">
+                                <div class="flex-grow-1">
+                                    <span class="d-block mb-1">This Year Spending</span>
+                                    <h4 class="fs-20 mb-0">Rp @((yoyComparison?.ThisYearTotal ?? 0).ToString("N0"))</h4>
+                                </div>
+                                <div class="flex-shrink-0 me-3 me-auto">
+                                    <i class="ri-line-chart-line fs-24 text-white bg-purple d-inline-block text-center rounded-circle text-white stats-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-lg-6">
-            <div class="card border-0 rounded-3 bg-white mb-4">
+            <div class="card border-0 rounded-3 bg-white mb-4" style="height: 100%;">
                 <div class="card-body p-4">
-                    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
+                    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
                         <h3 class="mb-0">Request Status Distribution</h3>
                         <span class="fs-12">All Time</span>
                     </div>
 
-                    <div style="margin: -24px -40px -19px -17px;">
-                        <div id="request_status_chart"></div>
-                    </div>
+                    <div id="request_status_chart" style="height: 280px;"></div>
                 </div>
             </div>
         </div>
@@ -182,6 +242,36 @@
                             </div>
                             <div class="flex-grow-1 d-flex align-items-center justify-content-center" style="margin: -24px -6px -25px -17px;">
                                 <div id="department_spending_chart" style="width:100%;height:100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top 5 Vendors Row -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-0 rounded-3 bg-white mb-4" style="height: 350px;">
+                        <div class="card-body p-4 h-100 d-flex flex-column">
+                            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+                                <span><i class="ri-store-2-line me-1"></i> Top 5 Vendors</span>
+                                <span class="fs-12">By Spending</span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div id="top_vendors_chart" style="width:100%;height:100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 rounded-3 bg-white mb-4" style="height: 350px;">
+                        <div class="card-body p-4 h-100 d-flex flex-column">
+                            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+                                <span><i class="ri-pie-chart-line me-1"></i> Spending by Category</span>
+                                <span class="fs-12">All Time</span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div id="category_spending_chart" style="width:100%;height:100%;"></div>
                             </div>
                         </div>
                     </div>
@@ -540,6 +630,121 @@
                         budgetChartElement.innerHTML = "<div class='alert alert-danger'>Could not load chart</div>";
                     }
                 }
+
+                // Top 5 Vendors Chart (Horizontal Bar)
+                var topVendorsChartElement = document.querySelector("#top_vendors_chart");
+                if (topVendorsChartElement) {
+                    var topVendorsOptions = {
+                        series: [{
+                            name: 'Total Spending',
+                            data: [
+                                @if (topVendors != null && topVendors.Any())
+                                {
+                                    @Html.Raw(string.Join(", ", topVendors.Select(v => v.TotalSpending)))
+                                }
+                                else
+                                {
+                                    <text>0</text>
+                                }
+                            ]
+                        }],
+                        chart: {
+                            type: 'bar',
+                            height: 280,
+                            toolbar: { show: false }
+                        },
+                        plotOptions: {
+                            bar: {
+                                horizontal: true,
+                                borderRadius: 4,
+                                barHeight: '70%'
+                            }
+                        },
+                        colors: ['#28a745'],
+                        dataLabels: { enabled: false },
+                        xaxis: {
+                            categories: [
+                                @if (topVendors != null && topVendors.Any())
+                                {
+                                    @Html.Raw(string.Join(", ", topVendors.Select(v => $"'{v.VendorName}'")))
+                                }
+                                else
+                                {
+                                    <text>'No data'</text>
+                                }
+                            ],
+                            labels: {
+                                formatter: function(val) {
+                                    return 'Rp ' + (val / 1000000).toFixed(0) + 'M';
+                                }
+                            }
+                        },
+                        tooltip: {
+                            y: {
+                                formatter: function(val) {
+                                    return 'Rp ' + val.toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    };
+
+                    try {
+                        var topVendorsChart = new ApexCharts(topVendorsChartElement, topVendorsOptions);
+                        topVendorsChart.render();
+                    } catch (err) {
+                        console.error("Error rendering Top Vendors chart:", err);
+                        topVendorsChartElement.innerHTML = "<div class='alert alert-danger'>Could not load chart</div>";
+                    }
+                }
+
+                // Spending by Category Chart (Donut)
+                var categoryChartElement = document.querySelector("#category_spending_chart");
+                if (categoryChartElement) {
+                    var categorySpendingOptions = {
+                        series: [
+                            @if (spendingByCategory != null && spendingByCategory.Any())
+                            {
+                                @Html.Raw(string.Join(", ", spendingByCategory.Select(c => c.TotalSpending)))
+                            }
+                            else
+                            {
+                                <text>100</text>
+                            }
+                        ],
+                        chart: {
+                            type: 'donut',
+                            height: 280
+                        },
+                        labels: [
+                            @if (spendingByCategory != null && spendingByCategory.Any())
+                            {
+                                @Html.Raw(string.Join(", ", spendingByCategory.Select(c => $"'{c.CategoryName}'")))
+                            }
+                            else
+                            {
+                                <text>'No data'</text>
+                            }
+                        ],
+                        colors: ['#667eea', '#764ba2', '#28a745', '#ffc107', '#17a2b8', '#dc3545'],
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            y: {
+                                formatter: function(val) {
+                                    return 'Rp ' + val.toLocaleString('id-ID');
+                                }
+                            }
+                        }
+                    };
+
+                    try {
+                        var categorySpendingChart = new ApexCharts(categoryChartElement, categorySpendingOptions);
+                        categorySpendingChart.render();
+                    } catch (err) {
+                        console.error("Error rendering Category Spending chart:", err);
+                        categoryChartElement.innerHTML = "<div class='alert alert-danger'>Could not load chart</div>";
+                    }
+                }
+
             } catch (err) {
                 console.error("Error in chart initialization:", err);
             }

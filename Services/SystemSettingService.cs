@@ -170,16 +170,22 @@ public class SystemSettingService : ISystemSettingService
     {
         try
         {
-            var ids = dto.Settings.Select(s => s.Id).ToList();
+            // Support both Id and Key based updates
+            var keys = dto.Settings.Where(s => !string.IsNullOrEmpty(s.Key)).Select(s => s.Key!).ToList();
+            var ids = dto.Settings.Where(s => s.Id.HasValue).Select(s => s.Id!.Value).ToList();
+
             var settings = await _context.SystemSettings
-                .Where(s => ids.Contains(s.Id))
+                .Where(s => keys.Contains(s.Key) || ids.Contains(s.Id))
                 .ToListAsync();
 
             foreach (var setting in settings)
             {
                 if (!setting.IsEditable) continue;
 
-                var update = dto.Settings.FirstOrDefault(u => u.Id == setting.Id);
+                // Find matching update by Key first, then by Id
+                var update = dto.Settings.FirstOrDefault(u => u.Key == setting.Key)
+                          ?? dto.Settings.FirstOrDefault(u => u.Id == setting.Id);
+                
                 if (update != null)
                 {
                     setting.Value = update.Value;
@@ -190,7 +196,11 @@ public class SystemSettingService : ISystemSettingService
 
             await _context.SaveChangesAsync();
 
-            // Invalidate all cache
+            // Invalidate all cache - including individual keys
+            foreach (var setting in settings)
+            {
+                InvalidateCache(setting.Key);
+            }
             InvalidateAllCache();
 
             return Result.Ok();
@@ -363,6 +373,85 @@ public class SystemSettingService : ISystemSettingService
                 Description = "Default currency code",
                 Category = "General",
                 DisplayOrder = 2,
+                IsEditable = true
+            },
+
+            // PO Template Settings
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Key = "POTemplate:CompanyName",
+                Value = "PT CorpProcure Indonesia",
+                DataType = "String",
+                Description = "Company name displayed on PO",
+                Category = "POTemplate",
+                DisplayOrder = 1,
+                IsEditable = true
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Key = "POTemplate:CompanyAddress",
+                Value = "Jl. Sudirman No. 123, Jakarta 10110",
+                DataType = "String",
+                Description = "Company address for PO header",
+                Category = "POTemplate",
+                DisplayOrder = 2,
+                IsEditable = true
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Key = "POTemplate:CompanyPhone",
+                Value = "+62 21 1234567",
+                DataType = "String",
+                Description = "Company phone number",
+                Category = "POTemplate",
+                DisplayOrder = 3,
+                IsEditable = true
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Key = "POTemplate:CompanyEmail",
+                Value = "procurement@corpprocure.com",
+                DataType = "String",
+                Description = "Company email for PO",
+                Category = "POTemplate",
+                DisplayOrder = 4,
+                IsEditable = true
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Key = "POTemplate:LogoPath",
+                Value = "",
+                DataType = "String",
+                Description = "Path to company logo file (uploaded)",
+                Category = "POTemplate",
+                DisplayOrder = 5,
+                IsEditable = true
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Key = "POTemplate:PrimaryColor",
+                Value = "#1e40af",
+                DataType = "String",
+                Description = "Primary color for PO (hex code)",
+                Category = "POTemplate",
+                DisplayOrder = 6,
+                IsEditable = true
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Key = "POTemplate:FooterText",
+                Value = "Thank you for your business",
+                DataType = "String",
+                Description = "Footer text displayed on PO",
+                Category = "POTemplate",
+                DisplayOrder = 7,
                 IsEditable = true
             }
         };

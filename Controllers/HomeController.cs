@@ -157,6 +157,76 @@ public class HomeController : Controller
 
             ViewData["MonthlyTrend"] = monthlyTrend;
 
+            // ============ TOP 5 VENDORS BY SPENDING ============
+            var topVendors = await _context.PurchaseOrders
+                .Include(po => po.Vendor)
+                .Where(po => po.Status != PoStatus.Draft && po.Status != PoStatus.Cancelled && po.Vendor != null)
+                .GroupBy(po => new { po.VendorId, po.Vendor!.Name })
+                .Select(g => new { 
+                    VendorName = g.Key.Name, 
+                    TotalSpending = g.Sum(po => po.GrandTotal),
+                    OrderCount = g.Count()
+                })
+                .OrderByDescending(x => x.TotalSpending)
+                .Take(5)
+                .ToListAsync();
+
+            ViewData["TopVendors"] = topVendors;
+
+            // ============ AVERAGE PROCESSING TIME ============
+            var approvedRequests = await baseQuery
+                .Where(p => p.Status == RequestStatus.Approved && p.FinanceApprovalDate.HasValue)
+                .Select(p => new { 
+                    p.CreatedAt, 
+                    ApprovalDate = p.FinanceApprovalDate!.Value 
+                })
+                .ToListAsync();
+
+            var avgProcessingDays = approvedRequests.Any() 
+                ? approvedRequests.Average(r => (r.ApprovalDate - r.CreatedAt).TotalDays)
+                : 0;
+
+            ViewData["AvgProcessingDays"] = Math.Round(avgProcessingDays, 1);
+
+            // ============ YEAR OVER YEAR COMPARISON ============
+            var lastYear = new DateTime(now.Year - 1, 1, 1);
+            var lastYearEnd = new DateTime(now.Year - 1, 12, 31);
+
+            var thisYearTotal = await baseQuery
+                .Where(p => p.Status == RequestStatus.Approved && p.FinanceApprovalDate >= thisYear)
+                .SumAsync(p => p.TotalAmount);
+
+            var lastYearTotal = await baseQuery
+                .Where(p => p.Status == RequestStatus.Approved && 
+                       p.FinanceApprovalDate >= lastYear && p.FinanceApprovalDate <= lastYearEnd)
+                .SumAsync(p => p.TotalAmount);
+
+            var yoyGrowth = lastYearTotal > 0 
+                ? (int)((thisYearTotal - lastYearTotal) * 100 / lastYearTotal) 
+                : (thisYearTotal > 0 ? 100 : 0);
+
+            ViewData["YoYComparison"] = new {
+                ThisYearTotal = thisYearTotal,
+                LastYearTotal = lastYearTotal,
+                Growth = yoyGrowth
+            };
+
+            // ============ SPENDING BY CATEGORY ============
+            var spendingByCategory = await _context.PurchaseOrderItems
+                .Include(poi => poi.Item)
+                    .ThenInclude(i => i.Category)
+                .Where(poi => poi.PurchaseOrder.Status != PoStatus.Draft && poi.PurchaseOrder.Status != PoStatus.Cancelled && poi.Item != null && poi.Item.Category != null)
+                .GroupBy(poi => poi.Item!.Category!.Name)
+                .Select(g => new {
+                    CategoryName = g.Key,
+                    TotalSpending = g.Sum(poi => poi.TotalPrice)
+                })
+                .OrderByDescending(x => x.TotalSpending)
+                .Take(6)
+                .ToListAsync();
+
+            ViewData["SpendingByCategory"] = spendingByCategory;
+
             // ============ BUDGET UTILIZATION ============
             // Global: All budgets
             // Manager/Staff: My Department budget

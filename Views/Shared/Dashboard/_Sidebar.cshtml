@@ -134,6 +134,22 @@
                         <span class="title">Approval Timeline</span>
                     </a>
                 </li>
+
+                <li class="menu-item">
+                    <a asp-controller="Report" asp-action="ExportData"
+                       class="menu-link @(Context.Request.Path == "/Report/ExportData" ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">download</span>
+                        <span class="title">Export Data</span>
+                    </a>
+                </li>
+
+                <li class="menu-item">
+                    <a asp-controller="Import" asp-action="Index"
+                       class="menu-link @(Context.Request.Path.StartsWithSegments("/Import") ? "active" : "")">
+                        <span class="material-symbols-outlined menu-icon">upload</span>
+                        <span class="title">Import Data</span>
+                    </a>
+                </li>
             }
 
             <!-- MASTER DATA (Admin and Finance) -->

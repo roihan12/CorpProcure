@@ -141,6 +141,12 @@ public static class IdentityConfiguration
         // Add Email service
         services.AddScoped<IEmailService, EmailService>();
 
+        // Add Export service
+        services.AddScoped<IExportService, ExportService>();
+
+        // Add Import service
+        services.AddScoped<IImportService, ImportService>();
+
         return services;
     }
 

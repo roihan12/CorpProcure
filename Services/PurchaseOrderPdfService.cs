@@ -9,25 +9,51 @@ using QRCoder;
 namespace CorpProcure.Services;
 
 /// <summary>
-/// Service implementation untuk generate Purchase Order PDF
+/// Service implementation untuk generate Purchase Order PDF with configurable template
 /// </summary>
 public class PurchaseOrderPdfService : IPurchaseOrderPdfService
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<PurchaseOrderPdfService> _logger;
     private readonly IConfiguration _configuration;
+    private readonly ISystemSettingService _settingService;
+    private readonly IWebHostEnvironment _env;
+
+    // Template settings (loaded once per PDF generation)
+    private string _companyName = "CorpProcure";
+    private string _companyAddress = "";
+    private string _companyPhone = "";
+    private string _companyEmail = "";
+    private string _logoPath = "";
+    private string _primaryColor = "#1e40af";
+    private string _footerText = "Thank you for your business";
 
     public PurchaseOrderPdfService(
         ApplicationDbContext context,
         ILogger<PurchaseOrderPdfService> logger,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ISystemSettingService settingService,
+        IWebHostEnvironment env)
     {
         _context = context;
         _logger = logger;
         _configuration = configuration;
+        _settingService = settingService;
+        _env = env;
         
         // Configure QuestPDF license
         QuestPDF.Settings.License = LicenseType.Community;
+    }
+
+    private async Task LoadTemplateSettingsAsync()
+    {
+        _companyName = await _settingService.GetValueAsync("POTemplate:CompanyName", "PT CorpProcure Indonesia");
+        _companyAddress = await _settingService.GetValueAsync("POTemplate:CompanyAddress", "");
+        _companyPhone = await _settingService.GetValueAsync("POTemplate:CompanyPhone", "");
+        _companyEmail = await _settingService.GetValueAsync("POTemplate:CompanyEmail", "");
+        _logoPath = await _settingService.GetValueAsync("POTemplate:LogoPath", "");
+        _primaryColor = await _settingService.GetValueAsync("POTemplate:PrimaryColor", "#1e40af");
+        _footerText = await _settingService.GetValueAsync("POTemplate:FooterText", "Thank you for your business");
     }
 
     public async Task<byte[]> GeneratePdfAsync(Guid purchaseRequestId)
@@ -57,6 +83,9 @@ public class PurchaseOrderPdfService : IPurchaseOrderPdfService
 
         _logger.LogInformation("Generating PDF for PO {PoNumber}", po.PoNumber);
 
+        // Load template settings
+        await LoadTemplateSettingsAsync();
+
         var document = Document.Create(container =>
         {
             container.Page(page =>
@@ -80,26 +109,58 @@ public class PurchaseOrderPdfService : IPurchaseOrderPdfService
         {
             column.Item().Row(row =>
             {
+                // Logo (if exists)
+                if (!string.IsNullOrEmpty(_logoPath))
+                {
+                    var fullLogoPath = Path.Combine(_env.WebRootPath, _logoPath.TrimStart('/'));
+                    if (File.Exists(fullLogoPath))
+                    {
+                        row.ConstantItem(60).Image(fullLogoPath);
+                        row.ConstantItem(10); // Spacer
+                    }
+                }
+
                 row.RelativeItem().Column(innerCol =>
                 {
-                    innerCol.Item().Text("CORP PROCURE")
-                        .FontSize(24)
+                    innerCol.Item().Text(_companyName)
+                        .FontSize(20)
                         .Bold()
-                        .FontColor(Colors.Blue.Darken2);
+                        .FontColor(Color.FromHex(_primaryColor));
 
-                    innerCol.Item().Text("Purchase Order Document")
-                        .FontSize(12)
-                        .FontColor(Colors.Grey.Darken1);
+                    if (!string.IsNullOrEmpty(_companyAddress))
+                    {
+                        innerCol.Item().Text(_companyAddress)
+                            .FontSize(9)
+                            .FontColor(Colors.Grey.Darken1);
+                    }
+
+                    if (!string.IsNullOrEmpty(_companyPhone) || !string.IsNullOrEmpty(_companyEmail))
+                    {
+                        innerCol.Item().Text(text =>
+                        {
+                            if (!string.IsNullOrEmpty(_companyPhone))
+                                text.Span($"Tel: {_companyPhone}  ").FontSize(8);
+                            if (!string.IsNullOrEmpty(_companyEmail))
+                                text.Span($"Email: {_companyEmail}").FontSize(8);
+                        });
+                    }
                 });
 
-                row.ConstantItem(100).AlignRight().Text(text =>
+                row.ConstantItem(100).AlignRight().Column(rightCol =>
                 {
-                    text.Span("Generated: ").FontSize(8);
-                    text.Span(DateTime.Now.ToString("dd MMM yyyy")).FontSize(8).Bold();
+                    rightCol.Item().Text("PURCHASE ORDER")
+                        .FontSize(14)
+                        .Bold()
+                        .FontColor(Color.FromHex(_primaryColor));
+                    rightCol.Item().Text(text =>
+                    {
+                        text.Span("Generated: ").FontSize(8);
+                        text.Span(DateTime.Now.ToString("dd MMM yyyy")).FontSize(8).Bold();
+                    });
                 });
             });
 
-            column.Item().PaddingTop(10).LineHorizontal(1).LineColor(Colors.Blue.Darken2);
+            column.Item().PaddingTop(10).LineHorizontal(1).LineColor(Color.FromHex(_primaryColor));
         });
     }
 
@@ -322,7 +383,7 @@ public class PurchaseOrderPdfService : IPurchaseOrderPdfService
         {
             row.RelativeItem().Text(text =>
             {
-                text.Span("Generated by CorpProcure System").FontSize(8).FontColor(Colors.Grey.Darken1);
+                text.Span(_footerText).FontSize(8).Italic().FontColor(Colors.Grey.Darken1);
             });
 
             row.RelativeItem().AlignRight().Text(text =>

@@ -20,6 +20,14 @@ namespace CorpProcure.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Export Data Hub - Central page for all exports
+        /// </summary>
+        public IActionResult ExportData()
+        {
+            return View();
+        }
+
         #region Purchase Request Report
 
         public async Task<IActionResult> PurchaseRequestReport(DateTime? startDate, DateTime? endDate, RequestStatus? status, Guid? departmentId)
